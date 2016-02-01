@@ -55,6 +55,7 @@
     <NMakeCleanCommandLine>nmake distclean</NMakeCleanCommandLine>
     <ReferencePath>$(SolutionDir)Release;$(SolutionDir)visualstudio\dll;$(ReferencePath)</ReferencePath>
     <ExecutablePath>$(QtPlatformDir)bin;$(ExecutablePath)</ExecutablePath>
+    <NMakeIncludeSearchPath>$(QtPlatformDir)include;$(QtPlatformDir)include\QtCore;$(QtPlatformDir)include\QtWidgets;$(QtPlatformDir)include\QtGui;$(QtPlatformDir)include\QtOpenGL;$(QtPlatformDir)include\QtOpenGLExtensions</NMakeIncludeSearchPath>
   </PropertyGroup>
   <ItemDefinitionGroup>
   </ItemDefinitionGroup>
