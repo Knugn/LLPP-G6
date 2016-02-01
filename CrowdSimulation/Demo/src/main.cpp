@@ -55,7 +55,7 @@ int main(int argc, char*argv[]) {
 
 		i += 1;
 	}
-	//
+	
 	// Reading the scenario file and setting up the crowd simulation model
 	Ped::Model model;
 	ParseScenario parser(scenefile);

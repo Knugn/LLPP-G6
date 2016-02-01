@@ -1,0 +1,93 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{110CF68E-89DB-4CC8-9FDA-A4B41ECECD1F}</ProjectGuid>
+    <Keyword>MakeFileProj</Keyword>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Makefile</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v110</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Makefile</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v110</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <NMakeOutput>Demo.exe</NMakeOutput>
+    <NMakePreprocessorDefinitions>WIN32;_DEBUG;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
+    <IncludePath>$(SolutionDir)visualstudio\include;$(QtPlatformDir)include;$(SolutionDir)Libpedsim\src;$(IncludePath)</IncludePath>
+    <NMakeBuildCommandLine>qmake -spec win32-msvc2012 &amp;&amp; nmake</NMakeBuildCommandLine>
+    <ReferencePath>$(SolutionDir)Debug;$(SolutionDir)visualstudio\dll;$(ReferencePath)</ReferencePath>
+    <LibraryPath>$(SolutionDir)Debug;$(QtPlatformDir)lib;$(SolutionDir)visualstudio\lib;$(LibraryPath)</LibraryPath>
+    <NMakeIncludeSearchPath>$(QtPlatformDir)include;$(QtPlatformDir)include\QtCore;$(QtPlatformDir)include\QtWidgets;$(QtPlatformDir)include\QtGui;$(QtPlatformDir)include\QtOpenGL;$(QtPlatformDir)include\QtOpenGLExtensions</NMakeIncludeSearchPath>
+    <NMakeCleanCommandLine>nmake distclean</NMakeCleanCommandLine>
+    <ExecutablePath>$(QtPlatformDir)bin;$(ExecutablePath)</ExecutablePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <NMakeOutput>Demo.exe</NMakeOutput>
+    <NMakePreprocessorDefinitions>WIN32;NDEBUG;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
+    <IncludePath>$(SolutionDir)visualstudio\include;$(QtPlatformDir)include;$(SolutionDir)Libpedsim\src;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)Release;$(QtPlatformDir)lib;$(SolutionDir)visualstudio\lib;$(LibraryPath)</LibraryPath>
+    <NMakeBuildCommandLine>qmake -spec win32-msvc2012 &amp;&amp; nmake</NMakeBuildCommandLine>
+    <NMakeCleanCommandLine>nmake distclean</NMakeCleanCommandLine>
+    <ReferencePath>$(SolutionDir)Release;$(SolutionDir)visualstudio\dll;$(ReferencePath)</ReferencePath>
+    <ExecutablePath>$(QtPlatformDir)bin;$(ExecutablePath)</ExecutablePath>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <None Include="demo.pro" />
+    <None Include="readme.txt" />
+    <None Include="src\src.pro" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\MainWindow.cpp" />
+    <ClCompile Include="src\ParseScenario.cpp" />
+    <ClCompile Include="src\PedSimulation.cpp" />
+    <ClCompile Include="src\Timer.cpp" />
+    <ClCompile Include="src\ViewAgent.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\MainWindow.h" />
+    <ClInclude Include="src\ParseScenario.h" />
+    <ClInclude Include="src\PedSimulation.h" />
+    <ClInclude Include="src\Timer.h" />
+    <ClInclude Include="src\ViewAgent.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Libpedsim\Libpedsim.vcxproj">
+      <Project>{e973076a-293f-4e5c-8533-ba3bd5deac92}</Project>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Xml Include="scenario.xml" />
+    <Xml Include="scenario_small.xml" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

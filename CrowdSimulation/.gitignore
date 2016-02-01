@@ -16,6 +16,9 @@ Demo/*
 # Add scenario files back in
 !Demo/scenario*.xml
 
+## General project add ins
+!*.vcxproj
+
 ##################################
 ## Auto-generated ignores below ##
 ##################################
