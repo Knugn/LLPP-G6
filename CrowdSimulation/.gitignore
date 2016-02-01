@@ -13,6 +13,8 @@ Libpedsim/*
 Demo/*
 # Add everything in src back in
 !Demo/src/
+# But ignore Makefiles in Demo/src again, since they are auto-generated.
+Demo/src/Makefile*
 # Add scenario files back in
 !Demo/scenario*.xml
 
