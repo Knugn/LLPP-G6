@@ -19,7 +19,6 @@
     <ClInclude Include="src\ped_waypoint.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="src\Makefile" />
     <None Include="src\tick_cuda.cu" />
   </ItemGroup>
   <ItemGroup>
