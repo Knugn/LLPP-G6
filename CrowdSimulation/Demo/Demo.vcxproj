@@ -40,7 +40,7 @@
     <NMakePreprocessorDefinitions>WIN32;_DEBUG;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
     <IncludePath>$(SolutionDir)visualstudio\include;$(QtPlatformDir)include;$(SolutionDir)Libpedsim\src;$(IncludePath)</IncludePath>
     <NMakeBuildCommandLine>qmake -spec win32-msvc2012 "Config += debug" &amp;&amp; nmake debug</NMakeBuildCommandLine>
-    <ReferencePath>$(SolutionDir)Debug;$(SolutionDir)visualstudio\dll;$(ReferencePath)</ReferencePath>
+    <ReferencePath>$(SolutionDir)$(Configuration);$(SolutionDir)visualstudio\dll;$(ReferencePath)</ReferencePath>
     <LibraryPath>$(SolutionDir)Debug;$(QtPlatformDir)lib;$(SolutionDir)visualstudio\lib;$(LibraryPath)</LibraryPath>
     <NMakeIncludeSearchPath>$(QtPlatformDir)include;$(QtPlatformDir)include\QtCore;$(QtPlatformDir)include\QtWidgets;$(QtPlatformDir)include\QtGui;$(QtPlatformDir)include\QtOpenGL;$(QtPlatformDir)include\QtOpenGLExtensions</NMakeIncludeSearchPath>
     <NMakeCleanCommandLine>nmake distclean</NMakeCleanCommandLine>
@@ -55,7 +55,7 @@
     <LibraryPath>$(SolutionDir)Release;$(QtPlatformDir)lib;$(SolutionDir)visualstudio\lib;$(LibraryPath)</LibraryPath>
     <NMakeBuildCommandLine>qmake -spec win32-msvc2012 "Config += release" &amp;&amp; nmake release</NMakeBuildCommandLine>
     <NMakeCleanCommandLine>nmake distclean</NMakeCleanCommandLine>
-    <ReferencePath>$(SolutionDir)Release;$(SolutionDir)visualstudio\dll;$(ReferencePath)</ReferencePath>
+    <ReferencePath>$(SolutionDir)$(Configuration);$(SolutionDir)visualstudio\dll;$(ReferencePath)</ReferencePath>
     <ExecutablePath>$(QtPlatformDir)bin;$(ExecutablePath)</ExecutablePath>
     <NMakeIncludeSearchPath>$(QtPlatformDir)include;$(QtPlatformDir)include\QtCore;$(QtPlatformDir)include\QtWidgets;$(QtPlatformDir)include\QtGui;$(QtPlatformDir)include\QtOpenGL;$(QtPlatformDir)include\QtOpenGLExtensions</NMakeIncludeSearchPath>
     <IntDir>$(ProjectDir)$(Configuration)\</IntDir>
