@@ -39,31 +39,30 @@
     <NMakeOutput>Demo.exe</NMakeOutput>
     <NMakePreprocessorDefinitions>WIN32;_DEBUG;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
     <IncludePath>$(SolutionDir)visualstudio\include;$(QtPlatformDir)include;$(SolutionDir)Libpedsim\src;$(IncludePath)</IncludePath>
-    <NMakeBuildCommandLine>qmake -spec win32-msvc2012 &amp;&amp; nmake</NMakeBuildCommandLine>
+    <NMakeBuildCommandLine>qmake -spec win32-msvc2012 "Config += debug" &amp;&amp; nmake debug</NMakeBuildCommandLine>
     <ReferencePath>$(SolutionDir)Debug;$(SolutionDir)visualstudio\dll;$(ReferencePath)</ReferencePath>
     <LibraryPath>$(SolutionDir)Debug;$(QtPlatformDir)lib;$(SolutionDir)visualstudio\lib;$(LibraryPath)</LibraryPath>
     <NMakeIncludeSearchPath>$(QtPlatformDir)include;$(QtPlatformDir)include\QtCore;$(QtPlatformDir)include\QtWidgets;$(QtPlatformDir)include\QtGui;$(QtPlatformDir)include\QtOpenGL;$(QtPlatformDir)include\QtOpenGLExtensions</NMakeIncludeSearchPath>
     <NMakeCleanCommandLine>nmake distclean</NMakeCleanCommandLine>
     <ExecutablePath>$(QtPlatformDir)bin;$(ExecutablePath)</ExecutablePath>
+    <IntDir>$(ProjectDir)$(Configuration)\</IntDir>
+    <OutDir>$(ProjectDir)$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <NMakeOutput>Demo.exe</NMakeOutput>
     <NMakePreprocessorDefinitions>WIN32;NDEBUG;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
     <IncludePath>$(SolutionDir)visualstudio\include;$(QtPlatformDir)include;$(SolutionDir)Libpedsim\src;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)Release;$(QtPlatformDir)lib;$(SolutionDir)visualstudio\lib;$(LibraryPath)</LibraryPath>
-    <NMakeBuildCommandLine>qmake -spec win32-msvc2012 &amp;&amp; nmake</NMakeBuildCommandLine>
+    <NMakeBuildCommandLine>qmake -spec win32-msvc2012 "Config += release" &amp;&amp; nmake release</NMakeBuildCommandLine>
     <NMakeCleanCommandLine>nmake distclean</NMakeCleanCommandLine>
     <ReferencePath>$(SolutionDir)Release;$(SolutionDir)visualstudio\dll;$(ReferencePath)</ReferencePath>
     <ExecutablePath>$(QtPlatformDir)bin;$(ExecutablePath)</ExecutablePath>
     <NMakeIncludeSearchPath>$(QtPlatformDir)include;$(QtPlatformDir)include\QtCore;$(QtPlatformDir)include\QtWidgets;$(QtPlatformDir)include\QtGui;$(QtPlatformDir)include\QtOpenGL;$(QtPlatformDir)include\QtOpenGLExtensions</NMakeIncludeSearchPath>
+    <IntDir>$(ProjectDir)$(Configuration)\</IntDir>
+    <OutDir>$(ProjectDir)$(Configuration)\</OutDir>
   </PropertyGroup>
   <ItemDefinitionGroup>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <None Include="demo.pro" />
-    <None Include="readme.txt" />
-    <None Include="src\src.pro" />
-  </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\MainWindow.cpp" />
@@ -87,6 +86,9 @@
   <ItemGroup>
     <Xml Include="scenario.xml" />
     <Xml Include="scenario_small.xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="demo.pro" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -16,6 +16,7 @@
 #include <vector>
 #include <set>
 
+
 using namespace std;
 
 class ParseScenario : public QObject
@@ -33,7 +34,12 @@ public:
 	
 private:
   QXmlStreamReader xmlReader;
-
+  //These varabels shood not be here....
+  int * xPosistions;
+  int * yPosistions;
+  int * dirX;
+  int * dirY;
+  ////////////////////////////
   // final collection of all created agents
   vector<Ped::Tagent*> agents;
 

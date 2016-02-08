@@ -6,60 +6,83 @@
 // Adapted for Low Level Parallel Programming 2015
 //
 #include "ped_model.h"
-#include "ped_agent.h"
 #include "ped_waypoint.h"
 #include "cuda_dummy.h"
 #include "ped_model.h"
 #include <iostream>
 #include <stack>
 #include <algorithm>
-#include <stdexcept>
 #include <thread>
 #include <omp.h>
+#include "ped_waypoint.h"
+#include "immintrin.h"
+
+#define NUM_THREADS 4
+std::thread threads[NUM_THREADS];
+
 
 void Ped::Model::setup(std::vector<Ped::Tagent*> agentsInScenario)
 {
 	agents = std::vector<Ped::Tagent*>(agentsInScenario.begin(), agentsInScenario.end());
+	int size = agents.size();
+	int * xPosistions = (int *)_aligned_malloc(size * sizeof(int), 64);
+	int * yPosistions = (int *)_aligned_malloc(size * sizeof(int), 64);
+
+	int * destX = (int *)_aligned_malloc(size * sizeof(int), 64);
+	int * destY = (int *)_aligned_malloc(size * sizeof(int), 64);
+	float * destR = (float *)_aligned_malloc(size * sizeof(float), 64);
+	destination = (Twaypoint**)_aligned_malloc(size * sizeof(Twaypoint*), 64);
+
+	//
+	__declspec(align(64)) deque<Twaypoint*> * waypoints = new deque<Twaypoint*>[size];
+
+	for (int i = 0; i < size; i++){
+		agents[i]->updateValus(&(xPosistions[i]), &(yPosistions[i]), &(destination[i]), &(destX[i]), &(destY[i]), &(destR[i]), &(waypoints[i]));
+	}
+	std::cout << "init" << std::endl;
 	treehash = new std::map<const Ped::Tagent*, Ped::Ttree*>();
+
+	//destination = new Twaypoint*[agents.size()];
 
 	// Create a new quadtree containing all agents
 	tree = new Ttree(NULL, treehash, 0, treeDepth, 0, 0, 1000, 800);
+	/*
 	for (std::vector<Ped::Tagent*>::iterator it = agents.begin(); it != agents.end(); ++it)
 	{
-		tree->addAgent(*it);
-	}
+	tree->addAgent(*it);
+	}*/
 
 	// This is the sequential implementation
 	implementation = SEQ;
 	//implementation = PTHREAD;
 	//implementation = OMP;
-
+	//implementation = VECTOR;
 	// Set up heatmap (relevant for Assignment 4)
 	setupHeatmapSeq();
 }
 
+int vectorSize = 8;
 void Ped::Model::tick_seq()
 {
-	std::vector<Tagent*> agents = getAgents();
-	for(std::vector<Tagent*>::iterator iter = agents.begin(); iter != agents.end(); ++iter) {
-		Tagent* agent = (*iter);
-		agent->computeNextDesiredPosition();
-		agent->setX(agent->getDesiredX());
-		agent->setY(agent->getDesiredY());
+	int size = agents.size();
+	for (int i = 0; i < size; i++) {
+		agents[i]->getNextDestinationNormal();
+	}
+	for (int i = 0; i < size; i++) {
+		agents[i]->computeNextDesiredPositionNormal();
 	}
 }
 
 void tick_threads_worker(int threadIdx, std::vector<Ped::Tagent*> agents) {
-	for (std::size_t idx=threadIdx; idx < agents.size(); idx += NUM_THREADS) {
+	for (std::size_t idx = threadIdx; idx < agents.size(); idx += NUM_THREADS) {
 		Ped::Tagent* agent = agents[idx];
-		agent->computeNextDesiredPosition();
+		//		agent->computeNextDesiredPosition();
 		agent->setX(agent->getDesiredX());
 		agent->setY(agent->getDesiredY());
 	}
 }
 
 void Ped::Model::tick_threads() {
-	std::vector<Tagent*> agents = getAgents();
 	for (int threadIdx = 0; threadIdx < NUM_THREADS; threadIdx++) {
 		threads[threadIdx] = std::thread(tick_threads_worker, threadIdx, agents);
 	}
@@ -69,15 +92,49 @@ void Ped::Model::tick_threads() {
 }
 
 void Ped::Model::tick_openmp() {
-	int idx;
-	Ped::Tagent* agent;
-	std::vector<Tagent*> agents = getAgents();
-#pragma omp parallel for shared(agents) private(idx,agent)
-	for (idx=0; idx < agents.size(); idx++) {
-		agent = agents[idx];
-		agent->computeNextDesiredPosition();
-		agent->setX(agent->getDesiredX());
-		agent->setY(agent->getDesiredY());
+	omp_set_num_threads(NUM_THREADS);
+	int size = agents.size();
+	//Vector for getNextDestination works bad
+	int tempSize = 0;
+	//int tempSize = size - (size % vectorSize);
+#pragma omp parallel for 
+	for (int i = 0; i < tempSize; i += vectorSize){
+		agents[i]->getNextDestination();
+	}
+//#pragma omp parallel for 
+	for (int i = tempSize; i < size; i++){
+		agents[i]->getNextDestinationNormal();
+	}
+	//tempSize = size - (size % vectorSize);
+#pragma omp parallel for 
+	for (int i = 0; i < tempSize; i += vectorSize){
+		agents[i]->computeNextDesiredPosition();
+	}
+
+	for (int i = tempSize; i < size; i++){
+		agents[i]->computeNextDesiredPositionNormal();
+	}
+}
+
+void Ped::Model::tick_vector() {
+	
+	int size = agents.size();
+
+	//int tempSize = 0;
+	int tempSize = size - (size % vectorSize);
+	for (int i = 0; i < tempSize; i += vectorSize){
+		agents[i]->getNextDestination();
+	}
+	for (int i = tempSize; i < size; i++){
+		agents[i]->getNextDestinationNormal();
+	}
+
+	//tempSize = size - (size % vectorSize);
+	for (int i = 0; i < tempSize; i += vectorSize){
+		agents[i]->computeNextDesiredPosition();
+	}
+	for (int i = tempSize; i < size; i++){
+		agents[i]->computeNextDesiredPositionNormal();
 	}
 }
 
@@ -95,8 +152,9 @@ void Ped::Model::tick()
 	case Ped::SEQ:
 		tick_seq();
 		break;
-	case Ped::CUDA:
 	case Ped::VECTOR:
+		tick_vector();
+	case Ped::CUDA:
 	default:
 		throw new std::runtime_error("Not implemented: " + implementation);
 		break;

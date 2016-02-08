@@ -6,6 +6,8 @@
 //
 #include "ParseScenario.h"
 #include <string>
+#include <vector>
+
 
 // Comparator used to identify if two agents differ in their position
 bool positionComparator(Ped::Tagent *a, Ped::Tagent *b) {
@@ -58,6 +60,7 @@ void ParseScenario::processXmlLine(QByteArray dataLine)
       handleXmlEndElement();
     }
   }
+  
 }
 
 void ParseScenario::handleXmlStartElement()
@@ -95,10 +98,13 @@ void ParseScenario::handleXmlEndElement()
   // collection of agents
   if (xmlReader.name() == "agent") {
     Ped::Tagent *a;
-    foreach (a, tempAgents)
-    {
-      agents.push_back(a);
-    }
+   // foreach (a, tempAgents)
+    //{
+     // agents.push_back(a);
+    //}
+	for (int i = 0; i < tempAgents.size(); i++){
+		agents.push_back(tempAgents[i]);
+	}
   }
 }
 
@@ -120,14 +126,17 @@ void ParseScenario::createAgents()
   int n = readDouble("n");
   double dx = readDouble("dx");
   double dy = readDouble("dy");
-
+ /* xPosistions = (int *)_aligned_malloc(n * sizeof(int), 64);
+  yPosistions = (int *)_aligned_malloc(n * sizeof(int), 64);
+  dirX = (int *)_aligned_malloc(n * sizeof(int), 64);
+  dirY = (int *)_aligned_malloc(n * sizeof(int), 64);*/
   tempAgents.clear();
   for (int i = 0; i < n; ++i)
   {
-    int xPos = x + qrand()/(RAND_MAX/dx) -dx/2;
-    int yPos = y + qrand()/(RAND_MAX/dy) -dy/2;
-    Ped::Tagent *a = new Ped::Tagent(xPos, yPos);
-    tempAgents.push_back(a);
+	int xPos = x + qrand() / (RAND_MAX / dx) - dx / 2;
+	int yPos = y + qrand() / (RAND_MAX / dy) - dy / 2;
+	Ped::Tagent *a = new Ped::Tagent(xPos, yPos);
+	tempAgents.push_back(a);
   }
 }
 

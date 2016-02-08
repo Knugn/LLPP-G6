@@ -13,16 +13,15 @@
 #define _ped_model_h_
 #include <vector>
 #include <map>
-#include <thread>
 
 #include "ped_tree.h"
 #include "ped_agent.h"
-
+#include "ped_waypoint.h"
 
 namespace Ped{
 	class Tagent;
 	class Ttree;
-
+	class Twaypoint;
 	// The implementation modes for Assignment 1 + 2:
 	// chooses which implementation to use for tick()
 	enum IMPLEMENTATION {CUDA, VECTOR, OMP, PTHREAD, SEQ};
@@ -54,23 +53,23 @@ namespace Ped{
 		int const * const * getHeatmap() const { return blurred_heatmap; };
 		int getHeatmapSize() const;
 
+
+
 	private:
+		void tick_seq();
+		void tick_threads();
+		void tick_openmp();
+		void tick_vector();
+
+		Twaypoint** destination;
 
 		// Denotes which implementation (sequential, parallel implementations..)
 		// should be used for calculating the desired positions of
 		// agents (Assignment 1)
 		IMPLEMENTATION implementation;
 
-		// Threads for tick_threads
-#define NUM_THREADS 8
-		std::thread threads[NUM_THREADS];
-
 		// The agents in this scenario
 		std::vector<Tagent*> agents;
-
-		void tick_seq();
-		void tick_threads();
-		void tick_openmp();
 
 		// Moves an agent towards its next position
 		void move(Ped::Tagent *agent);

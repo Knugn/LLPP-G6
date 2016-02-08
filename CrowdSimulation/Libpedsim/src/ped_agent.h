@@ -32,53 +32,95 @@ namespace Ped {
 
   class Tagent {
   public:
-    Tagent(int posX, int posY);
-    Tagent(double posX, double posY);
+	  Tagent(int posX, int posY);
     
     // Returns the coordinates of the desired position
-    int getDesiredX() const {return desiredPositionX;}
-    int getDesiredY() const {return desiredPositionY;}
+    int getDesiredX() const {return *desiredPositionX;}
+    int getDesiredY() const {return *desiredPositionY;}
 
     // Sets the agent's position
-    void setX(int newX) {x = newX;}
-    void setY(int newY) {y = newY;}
+    void setX(int newX) {*x = newX;}
+    void setY(int newY) {*y = newY;}
+
+
+	
 
     // Update the position according to get closer
     // to the current destination
-    void computeNextDesiredPosition();
+	void computeNextDesiredPosition();
 
     // Position of agent defined by x and y
-    int getX() const { return x; };
-    int getY() const { return y; };
+    int getX() const { return *x; };
+    int getY() const { return *y; };
 
     // Adds a new waypoint to reach for this agent
     void addWaypoint(Twaypoint* wp);
     
+
+	// Returnst he next destination to visit
+	Twaypoint* getNextDestination();
+	int * x;
+	int * y;
+	int * destX;
+	int * destY;
+	float * destR;
+	// The queue of all destinations that this agent still has to visit
+	deque<Twaypoint*> * waypoints;
+
+	//Ugly code, plz dont judge 
+	void updateValus(int * x, int *y, Twaypoint ** destination, int * destX, int * destY, float * destR, deque<Twaypoint*> * waypoints){
+		*x = *this->x;
+		*y = *this->y;
+
+		int * tempX = this->x;
+		int * tempY = this->y;
+
+		this->x = x;
+		this->y = y;
+
+		this->destination = destination;
+		this->destination[0] = NULL;
+
+		this->destX = destX;
+		this->destY = destY;
+		this->destR = destR;
+
+		 
+		*waypoints = *this->waypoints;
+		deque<Twaypoint*> * tempwaypoints = this->waypoints;
+		this->waypoints = waypoints;
+
+		free(tempX);
+		free(tempY);
+		//free(tempwaypoints);
+
+	}
+
+	void Ped::Tagent::computeNextDesiredPositionNormal();
+	Ped::Twaypoint* Ped::Tagent::getNextDestinationNormal();
   private:
     Tagent() {};
 
     // The agent's current position
-    int x;
-    int y;
+
 
     // The agent's desired next position
-    int desiredPositionX;
-    int desiredPositionY;
+    int * desiredPositionX;
+    int * desiredPositionY;
 
     // The current destination (may require several steps to reach)
-    Twaypoint* destination;
+    Twaypoint** destination;
 
     // The last destination
     Twaypoint* lastDestination;
 
-    // The queue of all destinations that this agent still has to visit
-    deque<Twaypoint*> waypoints;
+
 
     // Internal init function 
-    void init(int posX, int posY);
+	void init(int posX, int posY);
 
-    // Returnst he next destination to visit
-    Twaypoint* getNextDestination();
+
+
   };
 }
 

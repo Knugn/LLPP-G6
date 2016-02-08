@@ -4,7 +4,7 @@
 //     ==== Don't change this file! ====
 //
 // The main starting point for the crowd simulation.
-//
+
 #include <Windows.h>
 #include "ped_model.h"
 #include "MainWindow.h"
@@ -98,7 +98,7 @@ int main(int argc, char*argv[]) {
 
 	cout << "Done" << endl;
 	cout << "Type Enter to quit.." << endl;
-
+	
 	getchar(); // Wait for any key. Windows convenience...
 	delete (simulation);
 	return retval;
