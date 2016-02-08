@@ -266,3 +266,18 @@ Ped::Twaypoint* Ped::Tagent::getNextDestinationNormal() {
 	}
 	return nextDestination;
 }
+
+void Ped::Tagent::computeNextDesiredPositionOrignal() {
+	destination[0] = getNextDestinationNormal();
+	if (destination == NULL || destination[0] == NULL) {
+		// no destination, no need to
+		// compute where to move to
+		return;
+	}
+
+	float diffX = destination[0]->getx() - *x;
+	float diffY = destination[0]->gety() - *y;
+	float len = sqrt(diffX * diffX + diffY * diffY);
+	x[0] = round(*x + (diffX / len));
+	y[0] = round(*y + (diffY / len));
+}

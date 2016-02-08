@@ -53,10 +53,10 @@ void Ped::Model::setup(std::vector<Ped::Tagent*> agentsInScenario)
 	}*/
 
 	// This is the sequential implementation
-	implementation = SEQ;
+	//implementation = SEQ;
 	//implementation = PTHREAD;
 	//implementation = OMP;
-	//implementation = VECTOR;
+	implementation = Ped::VECTOR;
 	// Set up heatmap (relevant for Assignment 4)
 	setupHeatmapSeq();
 }
@@ -77,8 +77,7 @@ void tick_threads_worker(int threadIdx, std::vector<Ped::Tagent*> agents) {
 	for (std::size_t idx = threadIdx; idx < agents.size(); idx += NUM_THREADS) {
 		Ped::Tagent* agent = agents[idx];
 		//		agent->computeNextDesiredPosition();
-		agent->setX(agent->getDesiredX());
-		agent->setY(agent->getDesiredY());
+		agent->computeNextDesiredPositionOrignal();
 	}
 }
 
@@ -101,7 +100,7 @@ void Ped::Model::tick_openmp() {
 	for (int i = 0; i < tempSize; i += vectorSize){
 		agents[i]->getNextDestination();
 	}
-//#pragma omp parallel for 
+#pragma omp parallel for 
 	for (int i = tempSize; i < size; i++){
 		agents[i]->getNextDestinationNormal();
 	}
@@ -110,14 +109,14 @@ void Ped::Model::tick_openmp() {
 	for (int i = 0; i < tempSize; i += vectorSize){
 		agents[i]->computeNextDesiredPosition();
 	}
-
+#pragma omp parallel for 
 	for (int i = tempSize; i < size; i++){
 		agents[i]->computeNextDesiredPositionNormal();
 	}
 }
 
 void Ped::Model::tick_vector() {
-	
+
 	int size = agents.size();
 
 	//int tempSize = 0;
@@ -154,6 +153,7 @@ void Ped::Model::tick()
 		break;
 	case Ped::VECTOR:
 		tick_vector();
+		break;
 	case Ped::CUDA:
 	default:
 		throw new std::runtime_error("Not implemented: " + implementation);
@@ -165,7 +165,7 @@ void Ped::Model::tick()
 /// Everything below here relevant for Assignment 3.
 /// Don't use this for Assignment 1!
 ///////////////////////////////////////////////
-void Ped::Model::move( Ped::Tagent *agent)
+void Ped::Model::move(Ped::Tagent *agent)
 {
 	// Search for neighboring agents
 	set<const Ped::Tagent *> neighbors = getNeighbors(agent->getX(), agent->getY(), 2);
@@ -173,7 +173,7 @@ void Ped::Model::move( Ped::Tagent *agent)
 	// Retrieve their positions
 	std::vector<std::pair<int, int> > takenPositions;
 	for (std::set<const Ped::Tagent*>::iterator neighborIt = neighbors.begin(); neighborIt != neighbors.end(); ++neighborIt) {
-		std::pair<int,int> position((*neighborIt)->getX(), (*neighborIt)->getY());
+		std::pair<int, int> position((*neighborIt)->getX(), (*neighborIt)->getY());
 		takenPositions.push_back(position);
 	}
 
@@ -226,7 +226,7 @@ void Ped::Model::move( Ped::Tagent *agent)
 /// \param   dist the distance around x/y that will be searched for agents (search field is a square in the current implementation)
 set<const Ped::Tagent*> Ped::Model::getNeighbors(int x, int y, int dist) const {
 	// if there is no tree, return all agents
-	if(tree == NULL) 
+	if (tree == NULL)
 		return set<const Ped::Tagent*>(agents.begin(), agents.end());
 
 	// create the output list
@@ -241,7 +241,7 @@ set<const Ped::Tagent*> Ped::Model::getNeighbors(int x, int y, int dist) const {
 /// save memory. Ideally cleanup() is called every second, or about every 20 timestep.
 /// \date    2012-01-28
 void Ped::Model::cleanup() {
-	if(tree != NULL)
+	if (tree != NULL)
 		tree->cut();
 }
 
@@ -254,7 +254,7 @@ void Ped::Model::getNeighbors(list<const Ped::Tagent*>& neighborList, int x, int
 	stack<Ped::Ttree*> treestack;
 
 	treestack.push(tree);
-	while(!treestack.empty()) {
+	while (!treestack.empty()) {
 		Ped::Ttree *t = treestack.top();
 		treestack.pop();
 		if (t->isleaf) {
@@ -271,12 +271,12 @@ void Ped::Model::getNeighbors(list<const Ped::Tagent*>& neighborList, int x, int
 
 Ped::Model::~Model()
 {
-	if(tree != NULL)
+	if (tree != NULL)
 	{
 		delete tree;
 		tree = NULL;
 	}
-	if(treehash != NULL)
+	if (treehash != NULL)
 	{
 		delete treehash;
 		treehash = NULL;
