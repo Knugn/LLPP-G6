@@ -2,6 +2,11 @@
 ## Manually added ignores ##
 ############################
 
+#### Externals ####
+# Explicitly add .dll and .lib dependency files
+!visualstudio/dll/pthreadVC2.dll
+!visualstudio/lib/pthreadVC2.lib
+
 #### Libpedsim project #####
 # Ignore everything in top level project folder
 Libpedsim/*
