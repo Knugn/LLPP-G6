@@ -12,6 +12,8 @@
 Libpedsim/*
 # Add everything in src back in
 !Libpedsim/src/
+# and everything in res
+!Libpedsim/res/
 
 #### Demo project ####
 # Ignore everything in top level project folder

@@ -7,19 +7,45 @@
 //
 #include "ped_model.h"
 #include "ped_waypoint.h"
-#include "cuda_dummy.h"
-#include "ped_model.h"
+//#include "tick_cuda.h"
 #include <iostream>
 #include <stack>
 #include <algorithm>
 #include <thread>
 #include <omp.h>
-#include "ped_waypoint.h"
 #include "immintrin.h"
+
+//#include "CL/cl.h"
+#include "opencl_utils.h"
+#include <string>
+#include <fstream>
+#include <streambuf>
+
 
 #define NUM_THREADS 4
 std::thread threads[NUM_THREADS];
 
+cl::Device clDevice;
+cl::Context clContext;
+cl::Program clProgram;
+
+void setupOpenClProgram() {
+	clDevice = Ped::OpenClUtils::getDefaultDevice();
+	clContext = Ped::OpenClUtils::createDefaultDeviceContext();
+	std::string kernelPath = "..\\..\\Libpedsim\\res\\tick_scalar.cl";
+	std::ifstream t(kernelPath);
+	std::string kernelSource((std::istreambuf_iterator<char>(t)), std::istreambuf_iterator<char>());
+	cl::Program::Sources sources;
+	sources.push_back(std::make_pair(kernelSource.c_str(),kernelSource.length()));
+	clProgram = cl::Program(clContext,sources);
+	std::vector<cl::Device> devices;
+	devices.push_back(clDevice);
+	if (clProgram.build(devices) != CL_SUCCESS) {
+		std::cout << " Error building: " << clProgram.getBuildInfo<CL_PROGRAM_BUILD_LOG>(clDevice) << std::endl;
+		exit(1);
+	}
+	std::cout << "Successfully built cl kernel." << std::endl;
+}
 
 void Ped::Model::setup(std::vector<Ped::Tagent*> agentsInScenario)
 {
@@ -33,7 +59,6 @@ void Ped::Model::setup(std::vector<Ped::Tagent*> agentsInScenario)
 	float * destR = (float *)_aligned_malloc(size * sizeof(float), 64);
 	destination = (Twaypoint**)_aligned_malloc(size * sizeof(Twaypoint*), 64);
 
-	//
 	__declspec(align(64)) deque<Twaypoint*> * waypoints = new deque<Twaypoint*>[size];
 
 	for (int i = 0; i < size; i++){
@@ -53,10 +78,13 @@ void Ped::Model::setup(std::vector<Ped::Tagent*> agentsInScenario)
 	}*/
 
 	// This is the sequential implementation
-	//implementation = SEQ;
+	implementation = SEQ;
 	//implementation = PTHREAD;
 	//implementation = OMP;
-	implementation = Ped::VECTOR;
+	//implementation = VECTOR;
+
+	setupOpenClProgram();
+
 	// Set up heatmap (relevant for Assignment 4)
 	setupHeatmapSeq();
 }

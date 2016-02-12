@@ -23,8 +23,10 @@ QMAKE_CXXFLAGS += -std=c++0x -g
 
 Debug:LIBS += -L../Libpedsim/Debug
 Release:LIBS += -L../Libpedsim/Release
-#LIBS += -L../Debug
-LIBS += -llibpedsim -lpthreadVC2 
+#LIBS += -L"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v7.5\lib\win32"
+#LIBS += -L'"'$$(CudaToolkitLibDir)'"'
+LIBS += -L'"'$$(CUDA_PATH)\lib\win32'"'
+LIBS += -llibpedsim -lpthreadVC2 -lOpenCL
 LIBS += Qt5PlatformSupport.lib 
 
 DEFINES += NOMINMAX

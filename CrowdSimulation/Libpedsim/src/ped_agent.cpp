@@ -278,6 +278,6 @@ void Ped::Tagent::computeNextDesiredPositionOrignal() {
 	float diffX = destination[0]->getx() - *x;
 	float diffY = destination[0]->gety() - *y;
 	float len = sqrt(diffX * diffX + diffY * diffY);
-	x[0] = round(*x + (diffX / len));
-	y[0] = round(*y + (diffY / len));
+	x[0] = Ped::Utils::round(*x + (diffX / len));
+	y[0] = Ped::Utils::round(*y + (diffY / len));
 }

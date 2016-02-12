@@ -11,7 +11,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\cuda_dummy.h" />
+    <ClInclude Include="src\opencl_utils.h" />
     <ClInclude Include="src\ped_agent.h" />
     <ClInclude Include="src\ped_model.h" />
     <ClInclude Include="src\ped_tree.h" />
@@ -19,10 +19,8 @@
     <ClInclude Include="src\ped_waypoint.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="src\tick_cuda.cu" />
-  </ItemGroup>
-  <ItemGroup>
     <ClCompile Include="src\heatmap_seq.cpp" />
+    <ClCompile Include="src\opencl_utils.cpp" />
     <ClCompile Include="src\ped_agent.cpp" />
     <ClCompile Include="src\ped_model.cpp" />
     <ClCompile Include="src\ped_tree.cpp" />
@@ -59,7 +57,6 @@
     <NMakeOutput>
     </NMakeOutput>
     <NMakePreprocessorDefinitions>WIN32;_DEBUG;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
-    <ExecutablePath>$(ExecutablePath)</ExecutablePath>
     <IncludePath>$(SolutionDir)visualstudio\include;$(IncludePath)</IncludePath>
     <NMakeBuildCommandLine>nmake $(ProjectDir)src\Makefile</NMakeBuildCommandLine>
     <NMakeIncludeSearchPath>$(NMakeIncludeSearchPath)</NMakeIncludeSearchPath>
@@ -71,6 +68,7 @@
     <NMakePreprocessorDefinitions>WIN32;NDEBUG;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
     <OutDir>$(ProjectDir)$(Configuration)\</OutDir>
     <IntDir>$(ProjectDir)$(Configuration)\</IntDir>
+    <IncludePath>$(SolutionDir)visualstudio\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
