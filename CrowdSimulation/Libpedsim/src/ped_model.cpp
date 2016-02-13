@@ -193,11 +193,11 @@ void Ped::Model::tick_opencl() {
 		Ped::OpenClUtils::checkErr(err, createBufferErrMsg);
 		yPosBuffer = cl::Buffer(clContext,CL_MEM_READ_WRITE,sizeof(int)*nAgents, &err);
 		Ped::OpenClUtils::checkErr(err, createBufferErrMsg);
-		xDestBuffer = cl::Buffer(clContext,CL_MEM_READ_ONLY,sizeof(int)*nAgents, &err);
+		xDestBuffer = cl::Buffer(clContext,CL_MEM_READ_WRITE,sizeof(int)*nAgents, &err);
 		Ped::OpenClUtils::checkErr(err, createBufferErrMsg);
-		yDestBuffer = cl::Buffer(clContext,CL_MEM_READ_ONLY,sizeof(int)*nAgents, &err);
+		yDestBuffer = cl::Buffer(clContext,CL_MEM_READ_WRITE,sizeof(int)*nAgents, &err);
 		Ped::OpenClUtils::checkErr(err, createBufferErrMsg);
-		rDestBuffer = cl::Buffer(clContext,CL_MEM_READ_ONLY,sizeof(float)*nAgents, &err);
+		rDestBuffer = cl::Buffer(clContext,CL_MEM_READ_WRITE,sizeof(float)*nAgents, &err);
 		Ped::OpenClUtils::checkErr(err, createBufferErrMsg);
 
 
@@ -208,6 +208,18 @@ void Ped::Model::tick_opencl() {
 	}
 
 	cl_int err;
+
+	const char* writeBuffErrMsg = "Failed to write to device buffers.";
+	err = clQueue.enqueueWriteBuffer(xPosBuffer,CL_FALSE, 0, sizeof(int)*nAgents, agents[0]->x);
+	Ped::OpenClUtils::checkErr(err, writeBuffErrMsg);
+	err = clQueue.enqueueWriteBuffer(yPosBuffer,CL_FALSE, 0, sizeof(int)*nAgents, agents[0]->y);
+	Ped::OpenClUtils::checkErr(err, writeBuffErrMsg);
+	err = clQueue.enqueueWriteBuffer(xDestBuffer,CL_FALSE, 0, sizeof(int)*nAgents, agents[0]->destX);
+	Ped::OpenClUtils::checkErr(err, writeBuffErrMsg);
+	err = clQueue.enqueueWriteBuffer(yDestBuffer,CL_FALSE, 0, sizeof(int)*nAgents, agents[0]->destY);
+	Ped::OpenClUtils::checkErr(err, writeBuffErrMsg);
+	err = clQueue.enqueueWriteBuffer(rDestBuffer,CL_FALSE, 0, sizeof(float)*nAgents, agents[0]->destR);
+	Ped::OpenClUtils::checkErr(err, writeBuffErrMsg);
 
 	const char* setArgsErrMsg = "Failed to set kernel arguments.";
 	err = clKernel.setArg(0, xPosBuffer);
@@ -223,23 +235,11 @@ void Ped::Model::tick_opencl() {
 	err = clKernel.setArg(5, nAgents);
 	Ped::OpenClUtils::checkErr(err, setArgsErrMsg);
 
-	const char* writeBuffErrMsg = "Failed to write to device buffers.";
-	err = clQueue.enqueueWriteBuffer(xPosBuffer,CL_FALSE, 0, sizeof(int)*nAgents, agents[0]->x);
-	Ped::OpenClUtils::checkErr(err, writeBuffErrMsg);
-	err = clQueue.enqueueWriteBuffer(yPosBuffer,CL_FALSE, 0, sizeof(int)*nAgents, agents[0]->y);
-	Ped::OpenClUtils::checkErr(err, writeBuffErrMsg);
-	err = clQueue.enqueueWriteBuffer(xDestBuffer,CL_FALSE, 0, sizeof(int)*nAgents, agents[0]->destX);
-	Ped::OpenClUtils::checkErr(err, writeBuffErrMsg);
-	err = clQueue.enqueueWriteBuffer(yDestBuffer,CL_FALSE, 0, sizeof(int)*nAgents, agents[0]->destY);
-	Ped::OpenClUtils::checkErr(err, writeBuffErrMsg);
-	err = clQueue.enqueueWriteBuffer(rDestBuffer,CL_FALSE, 0, sizeof(float)*nAgents, agents[0]->destR);
-	Ped::OpenClUtils::checkErr(err, writeBuffErrMsg);
-
 	err = clQueue.enqueueNDRangeKernel(clKernel, cl::NullRange, cl::NDRange(nAgents), cl::NullRange);
 	Ped::OpenClUtils::checkErr(err, "Failed to enqueue, invoke or run kernel.");
 
 	const char* readBuffErrMsg = "Failed to read buffers back to host.";
-	err = clQueue.enqueueReadBuffer(xPosBuffer, CL_FALSE, 0, sizeof(int)*nAgents, agents[0]->x);
+	err = clQueue.enqueueReadBuffer(xPosBuffer, CL_TRUE, 0, sizeof(int)*nAgents, agents[0]->x);
 	Ped::OpenClUtils::checkErr(err, readBuffErrMsg);
 	err = clQueue.enqueueReadBuffer(yPosBuffer, CL_TRUE, 0, sizeof(int)*nAgents, agents[0]->y); //blocking
 	Ped::OpenClUtils::checkErr(err, readBuffErrMsg);
