@@ -36,5 +36,15 @@ namespace Ped {
 			return context;
 		}
 
+		void checkErr(cl_int err, const char * msg) {
+			if (err != CL_SUCCESS) {
+				std::cerr << "OpenCL ERROR ("<<err<<+"): " << msg  << std::endl;
+				std::cout << "Press any key to exit." << std::endl;
+				std::getchar();
+				exit(EXIT_FAILURE);
+				//throw EXIT_FAILURE;
+			}
+		}
+
 	};
 }
