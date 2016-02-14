@@ -193,15 +193,13 @@ void Ped::Model::tick_opencl() {
 		Ped::OpenClUtils::checkErr(err, createBufferErrMsg);
 		yPosBuffer = cl::Buffer(clContext,CL_MEM_READ_WRITE,sizeof(int)*nAgents, &err);
 		Ped::OpenClUtils::checkErr(err, createBufferErrMsg);
-		xDestBuffer = cl::Buffer(clContext,CL_MEM_READ_WRITE,sizeof(int)*nAgents, &err);
+		xDestBuffer = cl::Buffer(clContext,CL_MEM_READ_ONLY,sizeof(int)*nAgents, &err);
 		Ped::OpenClUtils::checkErr(err, createBufferErrMsg);
-		yDestBuffer = cl::Buffer(clContext,CL_MEM_READ_WRITE,sizeof(int)*nAgents, &err);
+		yDestBuffer = cl::Buffer(clContext,CL_MEM_READ_ONLY,sizeof(int)*nAgents, &err);
 		Ped::OpenClUtils::checkErr(err, createBufferErrMsg);
-		rDestBuffer = cl::Buffer(clContext,CL_MEM_READ_WRITE,sizeof(float)*nAgents, &err);
+		rDestBuffer = cl::Buffer(clContext,CL_MEM_READ_ONLY,sizeof(float)*nAgents, &err);
 		Ped::OpenClUtils::checkErr(err, createBufferErrMsg);
-
-
-
+		
 		clQueue = cl::CommandQueue(clContext,clDevice);
 
 		isClSetup = true;
@@ -239,7 +237,7 @@ void Ped::Model::tick_opencl() {
 	Ped::OpenClUtils::checkErr(err, "Failed to enqueue, invoke or run kernel.");
 
 	const char* readBuffErrMsg = "Failed to read buffers back to host.";
-	err = clQueue.enqueueReadBuffer(xPosBuffer, CL_TRUE, 0, sizeof(int)*nAgents, agents[0]->x);
+	err = clQueue.enqueueReadBuffer(xPosBuffer, CL_FALSE, 0, sizeof(int)*nAgents, agents[0]->x);
 	Ped::OpenClUtils::checkErr(err, readBuffErrMsg);
 	err = clQueue.enqueueReadBuffer(yPosBuffer, CL_TRUE, 0, sizeof(int)*nAgents, agents[0]->y); //blocking
 	Ped::OpenClUtils::checkErr(err, readBuffErrMsg);

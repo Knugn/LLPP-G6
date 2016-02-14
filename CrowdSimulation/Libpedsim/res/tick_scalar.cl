@@ -11,11 +11,11 @@ __kernel void agent_move(__global int * xPos,
 		return;
 	int dx = xDest[gid] - xPos[gid];
 	int dy = yDest[gid] - yPos[gid];
-	float dist = sqrt((float)(dx*dx+dy*dy));
-	if (dist <= rDest[gid])
+	float dist = sqrt(convert_float(dx*dx+dy*dy));
+	if (dist < rDest[gid])
 		return;
-	dx /= dist;
-	dy /= dist;
+	dx = round(dx/dist);
+	dy = round(dy/dist);
 	xPos[gid] += dx;
 	yPos[gid] += dy;
 }
