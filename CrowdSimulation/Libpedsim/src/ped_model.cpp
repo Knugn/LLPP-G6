@@ -42,6 +42,8 @@ std::pair <int, int> pairReturned;
 std::vector<int> regionX;
 std::vector<int> regionY;
 
+vector<int> combinedVec;
+
 std::vector<int> areaBelong;
 std::vector<Ped::Tagent*> agentBelong;
 std::vector<int> agentsOnBorder;
@@ -110,75 +112,84 @@ void Ped::Model::setup(const std::vector<Ped::Tagent*> &agentsInScenario)
 			minY = pairReturned.second;
 		}
 	}
+
+	int x1 = minX;
+	int x2 = minX + (std::abs(minX) + std::abs(maxX))*(0.33);
+	int x3 = minX + (std::abs(minX) + std::abs(maxX))*(0.66);
+	int x4 = maxX;
+	int y1 = minY;
+	int y2 = minY + (std::abs(minY) + std::abs(maxY))*(0.33);
+	int y3 = minY + (std::abs(minY) + std::abs(maxY))*(0.66);
+	int y4 = maxY;
 	
 
 	/*** super ugly, has to get shorter ***/
 	//9 regions are made
 	for (int i = 0; i < 3; i++) {
-		regionX.push_back(minX);
-		regionX.push_back(minX + maxX*(0.33));
-		regionX.push_back(minX + maxX*(0.33));
-		regionX.push_back(minX);
+		regionX.push_back(x1);
+		regionX.push_back(x2);
+		regionX.push_back(x2);
+		regionX.push_back(x1);
 	}
 		
-	regionY.push_back(minY);
-	regionY.push_back(minY);
-	regionY.push_back(minY + maxY*(0.33));
-	regionY.push_back(minY + maxY*(0.33));
+	regionY.push_back(y1);
+	regionY.push_back(y1);
+	regionY.push_back(y2);
+	regionY.push_back(y2);
 
-	regionY.push_back(minY + maxY*(0.33));
-	regionY.push_back(minY + maxY*(0.33));
-	regionY.push_back(minY + maxY*(0.66));
-	regionY.push_back(minY + maxY*(0.66));
+	regionY.push_back(y2);
+	regionY.push_back(y2);
+	regionY.push_back(y3);
+	regionY.push_back(y3);
 
-	regionY.push_back(minY + maxY*(0.66));
-	regionY.push_back(minY + maxY*(0.66));
-	regionY.push_back(minY + maxY*(1));
-	regionY.push_back(minY + maxY*(1));
-
-	for (int i = 0; i < 3; i++) {
-		regionX.push_back(minX + maxX*(0.33));
-		regionX.push_back(minX + maxX*(0.66));
-		regionX.push_back(minX + maxX*(0.66));
-		regionX.push_back(minX + maxX*(0.33));
-	}
-
-	regionY.push_back(minY);
-	regionY.push_back(minY);
-	regionY.push_back(minY + maxY*(0.33));
-	regionY.push_back(minY + maxY*(0.33));
-
-	regionY.push_back(minY + maxY*(0.33));
-	regionY.push_back(minY + maxY*(0.33));
-	regionY.push_back(minY + maxY*(0.66));
-	regionY.push_back(minY + maxY*(0.66));
-
-	regionY.push_back(minY + maxY*(0.66));
-	regionY.push_back(minY + maxY*(0.66));
-	regionY.push_back(minY + maxY*(1));
-	regionY.push_back(minY + maxY*(1));
+	regionY.push_back(y3);
+	regionY.push_back(y3);
+	regionY.push_back(y4);
+	regionY.push_back(y4);
 
 	for (int i = 0; i < 3; i++) {
-		regionX.push_back(minX + maxX*(0.66));
-		regionX.push_back(minX + maxX*(1));
-		regionX.push_back(minX + maxX*(1));
-		regionX.push_back(minX + maxX*(0.66));
+		regionX.push_back(x2);
+		regionX.push_back(x3);
+		regionX.push_back(x3);
+		regionX.push_back(x2);
 	}
 
-	regionY.push_back(minY);
-	regionY.push_back(minY);
-	regionY.push_back(minY + maxY*(0.33));
-	regionY.push_back(minY + maxY*(0.33));
+	regionY.push_back(y1);
+	regionY.push_back(y1);
+	regionY.push_back(y2);
+	regionY.push_back(y2);
 
-	regionY.push_back(minY + maxY*(0.33));
-	regionY.push_back(minY + maxY*(0.33));
-	regionY.push_back(minY + maxY*(0.66));
-	regionY.push_back(minY + maxY*(0.66));
+	regionY.push_back(y2);
+	regionY.push_back(y2);
+	regionY.push_back(y3);
+	regionY.push_back(y3);
 
-	regionY.push_back(minY + maxY*(0.66));
-	regionY.push_back(minY + maxY*(0.66));
-	regionY.push_back(minY + maxY*(1));
-	regionY.push_back(minY + maxY*(1));
+	regionY.push_back(y3);
+	regionY.push_back(y3);
+	regionY.push_back(y4);
+	regionY.push_back(y4);
+
+	for (int i = 0; i < 3; i++) {
+		regionX.push_back(x3);
+		regionX.push_back(x4);
+		regionX.push_back(x4);
+		regionX.push_back(x3);
+	}
+
+	regionY.push_back(y1);
+	regionY.push_back(y1);
+	regionY.push_back(y2);
+	regionY.push_back(y2);
+
+	regionY.push_back(y2);
+	regionY.push_back(y2);
+	regionY.push_back(y3);
+	regionY.push_back(y3);
+
+	regionY.push_back(y3);
+	regionY.push_back(y3);
+	regionY.push_back(y4);
+	regionY.push_back(y4);
 
 	/** end of ugly area **/
 
@@ -186,50 +197,32 @@ void Ped::Model::setup(const std::vector<Ped::Tagent*> &agentsInScenario)
 	int vectorSize = regionX.size();
 	int countin = 0;
 	int countout = 0;
+	bool borderAgentInsertedForThisLoop;
 
 	for (int ag = 0; ag < size; ag++)
 	{
+		borderAgentInsertedForThisLoop = false;
 		
-		/*for (int iter = 0; iter < vectorSize; iter++)
-		{
-			//check if an agent is on the border on the initial positions. If it is on a border where it should be assign it to the first region with some matching coordinates
-			//std::cout << ag << " agent " << iter << "\n";
-			if (agents[ag]->x[0] == maxX || agents[ag]->x[0] == minX || agents[ag]->y[0] == maxY || agents[ag]->y[0] == minY)
-			{
-				int agX = agents[ag]->x[0];
-				int agY = agents[ag]->y[0];
-				int agNumn = ag;
-				countout++;
-				std::cout << iter << " iteration" << " line, x is " << agX << " and y is " << agY << " and agent is" << agNumn << "\n";
-				break;
-			}
-		}*/
 
-		//something is wrong here cause countin + countout is more than 2447(number of agents)
 		for (int iter = 0; iter < vectorSize; iter+=4)
 		{
-			//if agent is into a region, assign it to that region
-			//the way the regions are made regionX[iter] is the min X value, regionX[iter] the max X value, regionY[iter] is the min Y, regionY[iter+2] is the max Y
-			/*
-				for example region 1 has coordinates
-				(-19->minX, 0->minY), (41->maxX, 0), (41, 29->maxY), (-19, 29)
-			*/
+
 			if (regionX[iter] < agents[ag]->x[0] && regionX[iter + 1] > agents[ag]->x[0] && regionY[iter] < agents[ag]->y[0] && regionY[iter + 2] > agents[ag]->y[0])
 			{
 				int area = (iter / 4) + 1;
-				//agentsInside.push_back(ag);
-				lastKnownRegion.push_back(area);
+				agentsInside.push_back(ag);
 				areaBelong.push_back(area); //the area that the agent belongs
 				agentBelong.push_back(agents[ag]); //the position of the agent in this vector corresponds to the position of the area in the previous vector
 				//std::cout << "agent " << ag << " on iteration " << iter << " is in area " << area << "\n";
 				countin++;
 			}
-			//if it is on the border, maybe just else without if works also
-			else if ((agents[ag]->x[0] == minX) || (agents[ag]->x[0] == minX + maxX*(0.33)) || (agents[ag]->x[0] == minX + maxX*(0.66)) || (agents[ag]->x[0] == minX + maxX)
-				|| (agents[ag]->y[0] == minY) || (agents[ag]->y[0] == minY + maxY*(0.33)) || (agents[ag]->y[0] == minY + maxY*(0.66)) || (agents[ag]->y[0] == minY + maxY))
+			//we can consider borders an other region entirely so we dont have to find the closest region which needs a lot of code
+			else if (borderAgentInsertedForThisLoop == false && ((agents[ag]->x[0] == x1) || (agents[ag]->x[0] == x2) || (agents[ag]->x[0] == x3) || (agents[ag]->x[0] == x4)
+				|| (agents[ag]->y[0] == y1) || (agents[ag]->y[0] == y2) || (agents[ag]->y[0] == y3) || (agents[ag]->y[0] == y4)))
 			{
-				//agentsOnBorder.push_back(ag);
-
+				agentsOnBorder.push_back(ag);
+				areaBelong.push_back(10);
+				borderAgentInsertedForThisLoop = true;
 				countout++;
 			}
 		}
