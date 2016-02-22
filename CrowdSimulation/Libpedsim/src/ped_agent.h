@@ -67,6 +67,8 @@ namespace Ped {
 		Twaypoint* getNextDestination();
 		int * x;
 		int * y;
+		int * desx;
+		int * desy;
 		int * destX;
 		int * destY;
 		float * destR;
@@ -74,7 +76,7 @@ namespace Ped {
 		deque<Twaypoint*> * waypoints;
 
 		//Ugly code, plz dont judge 
-		void updateValus(int * x, int *y, Twaypoint ** destination, int * destX, int * destY, float * destR, deque<Twaypoint*> * waypoints){
+		std::pair<int, int> updateValus(int * x, int *y, Twaypoint ** destination, int * destX, int * destY, float * destR, deque<Twaypoint*> * waypoints, int * desx, int * desy){
 			*x = *this->x;
 			*y = *this->y;
 
@@ -91,6 +93,8 @@ namespace Ped {
 			this->destY = destY;
 			this->destR = destR;
 
+			this->desx = desx;
+			this->desy = desy;
 
 			*waypoints = *this->waypoints;
 			deque<Twaypoint*> * tempwaypoints = this->waypoints;
@@ -99,6 +103,8 @@ namespace Ped {
 			free(tempX);
 			free(tempY);
 			//free(tempwaypoints);
+
+			return std::make_pair(*this->x, *this->y);
 
 		}
 
