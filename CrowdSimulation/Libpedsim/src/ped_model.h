@@ -17,6 +17,8 @@
 #include "ped_tree.h"
 #include "ped_agent.h"
 #include "ped_waypoint.h"
+#include <algorithm>
+//#include "voronoi.h"
 
 namespace Ped{
 	class Tagent;
@@ -31,7 +33,7 @@ namespace Ped{
 	public:
 
 		// Sets everything up
-		void setup(std::vector<Tagent*> agentsInScenario);
+		void setup(const std::vector<Tagent*> &agentsInScenario);
 
 		// Coordinates a time step in the scenario: move all agents by one step (if applicable).
 		void tick();
@@ -78,6 +80,8 @@ namespace Ped{
 		////////////
 		/// Everything below here won't be relevant until Assignment 3
 		///////////////////////////////////////////////
+
+		void moveNew(Ped::Tagent *agent);
 
 		// The maximum quadtree depth
 		static const int treeDepth = 10;    
