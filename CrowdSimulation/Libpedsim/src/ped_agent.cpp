@@ -29,14 +29,8 @@ void Ped::Tagent::init(int posX, int posY) {
 	lastDestination = NULL;
 }
 
-//__declspec(align(64)) int destX[8];
-//__declspec(align(64)) int destY[8];
 void Ped::Tagent::computeNextDesiredPosition() {
-	/*for (int i = 0; i < 8; i++){
-		if (destination == NULL || destination[i] != NULL){
-			return;
-		}
-	}*/
+	
 	bool checkDirectiom[8];
 	for (int i = 0; i < 8; i++){
 		checkDirectiom[i] =  (destination[i] != NULL);
@@ -112,16 +106,7 @@ void Ped::Tagent::computeNextDesiredPosition() {
 	_mm256_maskstore_epi32(y, allMaks, sum);
 
 
-/*	for (int i = 0; i < 8; i++){
-		x[i] = x[1];
-		y[i] = y[1];
-	}
-	*/
-	/*	int diffX = ((int)destinations[0]->getx()) - *x;
-	int diffY = ((int)destinations[0]->gety()) - *y;
-	double len = sqrt(diffX * diffX + diffY * diffY);
-	*x = round(*x + diffX / len);
-	*y = round(*y + diffY / len);*/
+
 }
 
 
@@ -200,14 +185,6 @@ Ped::Twaypoint* Ped::Tagent::getNextDestination() {
 		__m256i ansi = _mm256_cvtps_epi32(ans);
 		_mm256_maskstore_epi32(agentReachedDestination, allMaks, ansi);
 
-		/*for (int i = 0; i < 8; i++){
-			if (destination[i] != NULL) {
-				double diffX = destination[i]->getx() - x[i];
-				double diffY = destination[i]->gety() - y[i];
-				double length = sqrt(diffX * diffX + diffY * diffY);
-				agentReachedDestination[i] = length < destination[i]->getr();
-			}
-		}*/
 		
 	
 	for (int i = 0; i < 8; i++){
@@ -267,6 +244,8 @@ Ped::Twaypoint* Ped::Tagent::getNextDestinationNormal() {
 	return nextDestination;
 }
 
+
+
 void Ped::Tagent::computeNextDesiredPositionOrignal() {
 	destination[0] = getNextDestinationNormal();
 	if (destination == NULL || destination[0] == NULL) {
@@ -278,6 +257,6 @@ void Ped::Tagent::computeNextDesiredPositionOrignal() {
 	float diffX = destination[0]->getx() - *x;
 	float diffY = destination[0]->gety() - *y;
 	float len = sqrt(diffX * diffX + diffY * diffY);
-	x[0] = Ped::Utils::round(*x + (diffX / len));
-	y[0] = Ped::Utils::round(*y + (diffY / len));
+	desX[0] = Ped::Utils::round(*x + (diffX / len));
+	desY[0] = Ped::Utils::round(*y + (diffY / len));
 }

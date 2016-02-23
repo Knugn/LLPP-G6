@@ -20,7 +20,8 @@
 #include <string>
 #include <fstream>
 #include <streambuf>
-
+#include <iterator>
+#include <algorithm>    // std::sort
 
 #define NUM_THREADS 4
 std::thread threads[NUM_THREADS];
@@ -77,7 +78,10 @@ void Ped::Model::setup(const std::vector<Ped::Tagent*> &agentsInScenario)
 {
 	agents = std::vector<Ped::Tagent*>(agentsInScenario.begin(), agentsInScenario.end());
 	int size = agents.size();
-	int * xPosistions = (int *)_aligned_malloc(size * sizeof(int), 64);
+	nRegions = size / 50 + 1;
+	std::cout << "number of regions are: " << nRegions << " number of agents are " << size << std::endl;
+	//nRegions = 6;
+	xPosistions = (int *)_aligned_malloc(size * sizeof(int), 64);
 	int * yPosistions = (int *)_aligned_malloc(size * sizeof(int), 64);
 
 	int * destX = (int *)_aligned_malloc(size * sizeof(int), 64);
@@ -91,166 +95,32 @@ void Ped::Model::setup(const std::vector<Ped::Tagent*> &agentsInScenario)
 
 	__declspec(align(64)) deque<Twaypoint*> * waypoints = new deque<Twaypoint*>[size];
 
+
 	for (int i = 0; i < size; i++){
-		pairReturned = agents[i]->updateValus(&(xPosistions[i]), &(yPosistions[i]), &(destination[i]), &(destX[i]), &(destY[i]), &(destR[i]), &(waypoints[i]), &(desiredX[i]), &(desiredY[i]));
+		pairReturned = agents[i]->initValues(&(xPosistions[i]), &(yPosistions[i]), &(destination[i]), &(destX[i]), &(destY[i]), &(destR[i]), &(waypoints[i]), &(desiredX[i]), &(desiredY[i]));
 
-		if (pairReturned.first > maxX)
-		{
-			maxX = pairReturned.first;
-		}
-		else if (pairReturned.first < minX)
-		{
-			minX = pairReturned.first;
-		}
-
-		if (pairReturned.second > maxY)
-		{
-			maxY = pairReturned.second;
-		}
-		else if (pairReturned.second < minY)
-		{
-			minY = pairReturned.second;
-		}
 	}
-
-	int x1 = minX;
-	int x2 = minX + (std::abs(minX) + std::abs(maxX))*(0.33);
-	int x3 = minX + (std::abs(minX) + std::abs(maxX))*(0.66);
-	int x4 = maxX;
-	int y1 = minY;
-	int y2 = minY + (std::abs(minY) + std::abs(maxY))*(0.33);
-	int y3 = minY + (std::abs(minY) + std::abs(maxY))*(0.66);
-	int y4 = maxY;
 	
-
-	/*** super ugly, has to get shorter ***/
-	//9 regions are made
-	for (int i = 0; i < 3; i++) {
-		regionX.push_back(x1);
-		regionX.push_back(x2);
-		regionX.push_back(x2);
-		regionX.push_back(x1);
-	}
-		
-	regionY.push_back(y1);
-	regionY.push_back(y1);
-	regionY.push_back(y2);
-	regionY.push_back(y2);
-
-	regionY.push_back(y2);
-	regionY.push_back(y2);
-	regionY.push_back(y3);
-	regionY.push_back(y3);
-
-	regionY.push_back(y3);
-	regionY.push_back(y3);
-	regionY.push_back(y4);
-	regionY.push_back(y4);
-
-	for (int i = 0; i < 3; i++) {
-		regionX.push_back(x2);
-		regionX.push_back(x3);
-		regionX.push_back(x3);
-		regionX.push_back(x2);
-	}
-
-	regionY.push_back(y1);
-	regionY.push_back(y1);
-	regionY.push_back(y2);
-	regionY.push_back(y2);
-
-	regionY.push_back(y2);
-	regionY.push_back(y2);
-	regionY.push_back(y3);
-	regionY.push_back(y3);
-
-	regionY.push_back(y3);
-	regionY.push_back(y3);
-	regionY.push_back(y4);
-	regionY.push_back(y4);
-
-	for (int i = 0; i < 3; i++) {
-		regionX.push_back(x3);
-		regionX.push_back(x4);
-		regionX.push_back(x4);
-		regionX.push_back(x3);
-	}
-
-	regionY.push_back(y1);
-	regionY.push_back(y1);
-	regionY.push_back(y2);
-	regionY.push_back(y2);
-
-	regionY.push_back(y2);
-	regionY.push_back(y2);
-	regionY.push_back(y3);
-	regionY.push_back(y3);
-
-	regionY.push_back(y3);
-	regionY.push_back(y3);
-	regionY.push_back(y4);
-	regionY.push_back(y4);
-
-	/** end of ugly area **/
-
-	//vector size is 36, 4 coordinates foreach of the 9 areas
-	int vectorSize = regionX.size();
-	int countin = 0;
-	int countout = 0;
-	bool borderAgentInsertedForThisLoop;
-
-	for (int ag = 0; ag < size; ag++)
-	{
-		borderAgentInsertedForThisLoop = false;
-		
-
-		for (int iter = 0; iter < vectorSize; iter+=4)
-		{
-
-			if (regionX[iter] < agents[ag]->x[0] && regionX[iter + 1] > agents[ag]->x[0] && regionY[iter] < agents[ag]->y[0] && regionY[iter + 2] > agents[ag]->y[0])
-			{
-				int area = (iter / 4) + 1;
-				agentsInside.push_back(ag);
-				areaBelong.push_back(area); //the area that the agent belongs
-				agentBelong.push_back(agents[ag]); //the position of the agent in this vector corresponds to the position of the area in the previous vector
-				//std::cout << "agent " << ag << " on iteration " << iter << " is in area " << area << "\n";
-				countin++;
-			}
-			//we can consider borders an other region entirely so we dont have to find the closest region which needs a lot of code
-			else if (borderAgentInsertedForThisLoop == false && ((agents[ag]->x[0] == x1) || (agents[ag]->x[0] == x2) || (agents[ag]->x[0] == x3) || (agents[ag]->x[0] == x4)
-				|| (agents[ag]->y[0] == y1) || (agents[ag]->y[0] == y2) || (agents[ag]->y[0] == y3) || (agents[ag]->y[0] == y4)))
-			{
-				agentsOnBorder.push_back(ag);
-				areaBelong.push_back(10);
-				borderAgentInsertedForThisLoop = true;
-				countout++;
-			}
-		}
-	}
-
-	int ss = areaBelong.size();
-	std::cout << " agents on the border are " << countout;
-	std::cout << " agents INSIDE are " << countin;
-
-	std::cout << "init" << std::endl;
+	
 	treehash = new std::map<const Ped::Tagent*, Ped::Ttree*>();
 
-	//destination = new Twaypoint*[agents.size()];
 
 	// Create a new quadtree containing all agents
 	tree = new Ttree(NULL, treehash, 0, treeDepth, 0, 0, 1000, 800);
 	
 	for (std::vector<Ped::Tagent*>::iterator it = agents.begin(); it != agents.end(); ++it)
 	{
-	tree->addAgent(*it);
+		tree->addAgent(*it);
 	}
-
 	// This is the sequential implementation
-	implementation = SEQ;
+	//implementation = SEQ;
 	//implementation = PTHREAD;
 	//implementation = OMP;
 	//implementation = VECTOR;
 	//implementation = OCL;
+	implementation = SEQ_COL;
+	//implementation = OMP_COL;
+
 
 	// Set up heatmap (relevant for Assignment 4)
 	setupHeatmapSeq();
@@ -266,29 +136,13 @@ void Ped::Model::tick_seq()
 	for (int i = 0; i < size; i++) {
 		agents[i]->computeNextDesiredPositionNormal();
 	}
-
-	//assignment 3
-	int tempSize = size - (size % vectorSize);
-	//tempSize = 0;
-
-	for (int r = 0; r < 9; r++) {
-
-	}
-
-	for (int i = 0; i < tempSize; i += vectorSize) {
-		move(agents[i]);
-	}
-
-	for (int i = tempSize; i < size; i++) {
-		move(agents[i]);
-	}
 }
 
 void tick_threads_worker(int threadIdx, std::vector<Ped::Tagent*> agents) {
 	for (std::size_t idx = threadIdx; idx < agents.size(); idx += NUM_THREADS) {
 		Ped::Tagent* agent = agents[idx];
-		//		agent->computeNextDesiredPosition();
-		agent->computeNextDesiredPositionOrignal();
+		agent->getNextDestinationNormal();
+		agent->computeNextDesiredPositionNormal();
 	}
 }
 
@@ -417,7 +271,71 @@ void Ped::Model::tick_opencl() {
 	err = clQueue.enqueueReadBuffer(yPosBuffer, CL_TRUE, 0, sizeof(int)*nAgents, agents[0]->y); //blocking
 	Ped::OpenClUtils::checkErr(err, readBuffErrMsg);
 
-	std::cout << "Tick with OpenCL completed." << std::endl;
+	//std::cout << "Tick with OpenCL completed." << std::endl;
+}
+
+
+void Ped::Model::tick_seq_col(){
+
+
+	int size = agents.size();
+	for (int i = 0; i < size; i++) {
+		agents[i]->computeNextDesiredPositionOrignal();
+	}
+
+	for (int i = 0; i < size; i++) {
+		move(agents[i]);
+	}
+}
+
+
+void Ped::Model::tick_openmp_col(){
+
+
+	int size = agents.size();
+
+	for (int i = 0; i < size; i++) {
+		agents[i]->computeNextDesiredPositionOrignal();
+	}
+	std::vector<int> vec(xPosistions, xPosistions + size);
+	std::vector<std::vector<Tagent *>> regions(nRegions);
+	std::sort(vec.begin(), vec.end());
+	std::vector<int> regionsPos(nRegions + 1);
+	for (int i = 0; i < nRegions; i++){
+		regionsPos[i] = vec[(size*i) / nRegions];
+		if (i != 0 && regionsPos[i] - regionsPos[i - 1] <= 1){
+			regionsPos[i] = regionsPos[i - 1] + 2;
+		}
+		//std::cout << regionsPos[i] << " ";
+	}
+
+	//regionsPos[nRegions] = vec[size - 1] + 1;
+	regionsPos[nRegions] = std::numeric_limits<int>::max();
+	
+	for (int i = 0; i < size; i++){
+		for (int region = 0; region < nRegions; region++){
+			if (regionsPos[region] <= agents[i]->getX() && regionsPos[region + 1] > agents[i]->getX()){
+				regions[region].push_back(agents[i]);
+				break;
+			}
+		}
+	}
+
+
+	#pragma omp parallel 
+	{
+		#pragma omp for schedule(dynamic,1)
+		for (int i = 0; i < nRegions; i += 2){
+			moveRegion(regions[i]);
+		}
+		
+		#pragma omp for schedule(dynamic,1)
+		for (int i = 1; i < nRegions; i += 2){
+			moveRegion(regions[i]);
+		}
+	}
+
+
 }
 
 void Ped::Model::tick()
@@ -440,71 +358,23 @@ void Ped::Model::tick()
 	case Ped::OCL:
 		tick_opencl();
 		break;
+	case Ped::SEQ_COL:
+		tick_seq_col();
+		break;
+	case Ped::OMP_COL:
+		tick_openmp_col();
+		break;	
 	case Ped::CUDA:
 	default:
 		throw new std::runtime_error("Not implemented: " + implementation);
 		break;
 	}
 }
-
-////////////
-/// Everything below here relevant for Assignment 3.
-/// Don't use this for Assignment 1!
-///////////////////////////////////////////////
-void Ped::Model::moveNew(Ped::Tagent *agent)
-{
-	// Search for neighboring agents
-	set<const Ped::Tagent *> neighbors = getNeighbors(agent->x[0], agent->y[0], 2);
-
-	// Retrieve their positions
-	std::vector<std::pair<int, int> > takenPositions;
-	for (std::set<const Ped::Tagent*>::iterator neighborIt = neighbors.begin(); neighborIt != neighbors.end(); ++neighborIt) {
-		std::pair<int, int> position((*neighborIt)->getX(), (*neighborIt)->getY());
-		takenPositions.push_back(position);
-	}
-
-	// Compute the three alternative positions that would bring the agent
-	// closer to his desiredPosition, starting with the desiredPosition itself
-	std::vector<std::pair<int, int> > prioritizedAlternatives;
-	std::pair<int, int> pDesired(agent->desx[0], agent->desy[0]);
-	prioritizedAlternatives.push_back(pDesired);
-
-	int diffX = pDesired.first - agent->x[0];
-	int diffY = pDesired.second - agent->y[0];
-	std::pair<int, int> p1, p2;
-	if (diffX == 0 || diffY == 0)
-	{
-		// Agent wants to walk straight to North, South, West or East
-		p1 = std::make_pair(pDesired.first + diffY, pDesired.second + diffX);
-		p2 = std::make_pair(pDesired.first - diffY, pDesired.second - diffX);
-	}
-	else {
-		// Agent wants to walk diagonally
-		p1 = std::make_pair(pDesired.first, agent->y[0]);
-		p2 = std::make_pair(agent->x[0], pDesired.second);
-	}
-	prioritizedAlternatives.push_back(p1);
-	prioritizedAlternatives.push_back(p2);
-
-	// Find the first empty alternative position
-	for (std::vector<pair<int, int> >::iterator it = prioritizedAlternatives.begin(); it != prioritizedAlternatives.end(); ++it) {
-
-		// If the current position is not yet taken by any neighbor
-		if (std::find(takenPositions.begin(), takenPositions.end(), *it) == takenPositions.end()) {
-
-			// Set the agent's position 
-			//agent->setX((*it).first);
-			//agent->setY((*it).second);
-			agent->x[0] = (*it).first;
-			agent->y[0] = (*it).second;
-
-			// Update the quadtree
-			(*treehash)[agent]->moveAgent(agent);
-			break;
-		}
+void Ped::Model::moveRegion(std::vector<Ped::Tagent *> regionAgents){
+	for (int i = 0; i < regionAgents.size(); i++){
+		move(regionAgents[i]);
 	}
 }
-
 
 void Ped::Model::move(Ped::Tagent *agent)
 {
@@ -521,7 +391,7 @@ void Ped::Model::move(Ped::Tagent *agent)
 	// Compute the three alternative positions that would bring the agent
 	// closer to his desiredPosition, starting with the desiredPosition itself
 	std::vector<std::pair<int, int> > prioritizedAlternatives;
-	std::pair<int, int> pDesired(agent->desx[0], agent->desy[0]);
+	std::pair<int, int> pDesired(agent->desX[0], agent->desY[0]);
 	prioritizedAlternatives.push_back(pDesired);
 
 	int diffX = pDesired.first - agent->x[0];
@@ -625,3 +495,64 @@ Ped::Model::~Model()
 		treehash = NULL;
 	}
 }
+
+
+
+
+////////////
+/// Everything below here relevant for Assignment 3.
+/// Don't use this for Assignment 1!
+///////////////////////////////////////////////
+/*void Ped::Model::moveNew(Ped::Tagent *agent)
+{
+	// Search for neighboring agents
+	set<const Ped::Tagent *> neighbors = getNeighbors(agent->x[0], agent->y[0], 2);
+
+	// Retrieve their positions
+	std::vector<std::pair<int, int> > takenPositions;
+	for (std::set<const Ped::Tagent*>::iterator neighborIt = neighbors.begin(); neighborIt != neighbors.end(); ++neighborIt) {
+		std::pair<int, int> position((*neighborIt)->getX(), (*neighborIt)->getY());
+		takenPositions.push_back(position);
+	}
+
+	// Compute the three alternative positions that would bring the agent
+	// closer to his desiredPosition, starting with the desiredPosition itself
+	std::vector<std::pair<int, int> > prioritizedAlternatives;
+	std::pair<int, int> pDesired(agent->desX[0], agent->desY[0]);
+	prioritizedAlternatives.push_back(pDesired);
+
+	int diffX = pDesired.first - agent->x[0];
+	int diffY = pDesired.second - agent->y[0];
+	std::pair<int, int> p1, p2;
+	if (diffX == 0 || diffY == 0)
+	{
+		// Agent wants to walk straight to North, South, West or East
+		p1 = std::make_pair(pDesired.first + diffY, pDesired.second + diffX);
+		p2 = std::make_pair(pDesired.first - diffY, pDesired.second - diffX);
+	}
+	else {
+		// Agent wants to walk diagonally
+		p1 = std::make_pair(pDesired.first, agent->y[0]);
+		p2 = std::make_pair(agent->x[0], pDesired.second);
+	}
+	prioritizedAlternatives.push_back(p1);
+	prioritizedAlternatives.push_back(p2);
+
+	// Find the first empty alternative position
+	for (std::vector<pair<int, int> >::iterator it = prioritizedAlternatives.begin(); it != prioritizedAlternatives.end(); ++it) {
+
+		// If the current position is not yet taken by any neighbor
+		if (std::find(takenPositions.begin(), takenPositions.end(), *it) == takenPositions.end()) {
+
+			// Set the agent's position 
+			//agent->setX((*it).first);
+			//agent->setY((*it).second);
+			agent->x[0] = (*it).first;
+			agent->y[0] = (*it).second;
+
+			// Update the quadtree
+			(*treehash)[agent]->moveAgent(agent);
+			break;
+		}
+	}
+}*/

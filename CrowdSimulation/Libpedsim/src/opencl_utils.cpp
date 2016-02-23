@@ -8,7 +8,7 @@
 namespace Ped {
 
 	namespace OpenClUtils {
-
+		//
 		cl::Platform const getDefaultPlatform() {
 			std::vector<cl::Platform> all_platforms;
 			cl::Platform::get(&all_platforms);

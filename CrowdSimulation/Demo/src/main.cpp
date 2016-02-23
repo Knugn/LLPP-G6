@@ -22,7 +22,7 @@
 #include <ctime>
 #include <cstring>
 #pragma comment(lib, "libpedsim.lib")
-
+////
 int main(int argc, char*argv[]) { 
 	bool timing_mode = 0;
 	int i = 1;
@@ -66,7 +66,7 @@ int main(int argc, char*argv[]) {
 	MainWindow mainwindow(model);
 
 	// Default number of steps to simulate
-	const int maxNumberOfStepsToSimulate = 10000;
+	const int maxNumberOfStepsToSimulate = 5000;
 	PedSimulation *simulation = new PedSimulation(model, mainwindow);
 
 	cout << "Demo setup complete, running ..." << endl;
@@ -93,9 +93,9 @@ int main(int argc, char*argv[]) {
 	// End timing
 	GetSystemTime(&stop);
 
-	WORD duration = (stop.wSecond - start.wSecond)*1000 + (stop.wMilliseconds - start.wMilliseconds);
+	WORD duration = (stop.wMinute - start.wMinute) * 60000 + (stop.wSecond - start.wSecond) * 1000 + (stop.wMilliseconds - start.wMilliseconds);
 	cout << "Time: " << duration <<  " milliseconds." << endl;
-
+	cout << "Time: min,sek,milli " << stop.wMinute - start.wMinute << ":" << stop.wSecond - start.wSecond << "." << stop.wMilliseconds - start.wMilliseconds << endl;
 	cout << "Done" << endl;
 	cout << "Type Enter to quit.." << endl;
 	

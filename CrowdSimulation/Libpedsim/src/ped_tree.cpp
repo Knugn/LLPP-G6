@@ -29,10 +29,17 @@ Ped::Ttree::Ttree(Ped::Ttree *root,std::map<const Ped::Tagent*, Ped::Ttree*> *tr
   maxDepth = pmaxDepth;
 
   // Tree contains of 4 subtrees
-  tree1 = NULL;
-  tree2 = NULL;
-  tree3 = NULL;
-  tree4 = NULL;
+  if (pdepth < pmaxDepth){
+	  addChildren();
+	  isleaf = false;
+  }
+  else{
+	  tree1 = NULL;
+	  tree2 = NULL;
+	  tree3 = NULL;
+	  tree4 = NULL;
+	  isleaf = true;
+  }
 };
 
 /// Destructor. Deleted this node and all its children. If there are any agents left, they are removed first (not deleted).

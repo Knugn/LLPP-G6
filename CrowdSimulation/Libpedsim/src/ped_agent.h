@@ -41,8 +41,8 @@ namespace Ped {
 		Tagent(int posX, int posY);
 
 		// Returns the coordinates of the desired position
-		int getDesiredX() const { return *desiredPositionX; }
-		int getDesiredY() const { return *desiredPositionY; }
+		int getDesiredX() const { return *desX; }
+		int getDesiredY() const { return *desY; }
 
 		// Sets the agent's position
 		void setX(int newX) { *x = newX; }
@@ -67,8 +67,8 @@ namespace Ped {
 		Twaypoint* getNextDestination();
 		int * x;
 		int * y;
-		int * desx;
-		int * desy;
+		int * desX;
+		int * desY;
 		int * destX;
 		int * destY;
 		float * destR;
@@ -76,7 +76,7 @@ namespace Ped {
 		deque<Twaypoint*> * waypoints;
 
 		//Ugly code, plz dont judge 
-		std::pair<int, int> updateValus(int * x, int *y, Twaypoint ** destination, int * destX, int * destY, float * destR, deque<Twaypoint*> * waypoints, int * desx, int * desy){
+		std::pair<int, int> initValues(int * x, int *y, Twaypoint ** destination, int * destX, int * destY, float * destR, deque<Twaypoint*> * waypoints, int * desx, int * desy){
 			*x = *this->x;
 			*y = *this->y;
 
@@ -93,8 +93,8 @@ namespace Ped {
 			this->destY = destY;
 			this->destR = destR;
 
-			this->desx = desx;
-			this->desy = desy;
+			this->desX = desx;
+			this->desY = desy;
 
 			*waypoints = *this->waypoints;
 			deque<Twaypoint*> * tempwaypoints = this->waypoints;
@@ -117,8 +117,8 @@ namespace Ped {
 
 
 		// The agent's desired next position
-		int * desiredPositionX;
-		int * desiredPositionY;
+		//int  desiredPositionX;
+		//int  desiredPositionY;
 
 		// The current destination (may require several steps to reach)
 		Twaypoint** destination;

@@ -35,6 +35,7 @@ namespace Ped {
 	// Removes all agents from this tree
         virtual void clear();
 
+
         // Adds an agent to the tree. Searches the right node and adds the agent there.
         // If there are too many agents at that node allready, a new child is created.
         virtual void addAgent(const Ped::Tagent *a);

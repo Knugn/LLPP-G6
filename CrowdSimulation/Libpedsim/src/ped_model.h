@@ -26,11 +26,13 @@ namespace Ped{
 	class Twaypoint;
 	// The implementation modes for Assignment 1 + 2:
 	// chooses which implementation to use for tick()
-	enum IMPLEMENTATION {OCL, CUDA, VECTOR, OMP, PTHREAD, SEQ};
+	enum IMPLEMENTATION {OCL, CUDA, VECTOR, OMP, PTHREAD, SEQ, SEQ_COL, OMP_COL};
 
 	class Model
 	{
 	public:
+
+
 
 		// Sets everything up
 		void setup(const std::vector<Tagent*> &agentsInScenario);
@@ -63,6 +65,8 @@ namespace Ped{
 		void tick_openmp();
 		void tick_vector();
 		void tick_opencl();
+		void tick_seq_col();
+		void tick_openmp_col();
 
 		Twaypoint** destination;
 
@@ -76,15 +80,16 @@ namespace Ped{
 
 		// Moves an agent towards its next position
 		void move(Ped::Tagent *agent);
-
+		void moveRegion(std::vector<Ped::Tagent *> regionAgents);
 		////////////
 		/// Everything below here won't be relevant until Assignment 3
 		///////////////////////////////////////////////
 
-		void moveNew(Ped::Tagent *agent);
 
+		int * xPosistions;
+		int nRegions;
 		// The maximum quadtree depth
-		static const int treeDepth = 10;    
+		static const int treeDepth = 8;    
 
 		// Quadtree that keeps track of the positions of each agent
 		// for faster neighbor search in 
