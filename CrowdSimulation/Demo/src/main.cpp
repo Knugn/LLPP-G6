@@ -25,27 +25,58 @@
 ////
 int main(int argc, char*argv[]) { 
 	bool timing_mode = 0;
-	int i = 1;
 	QString scenefile = "scenario.xml";
+	Ped::IMPLEMENTATION implementation = Ped::IMPLEMENTATION::SEQ;
 
+	int i = 1;
 	// Argument handling
 	while (i < argc)
 	{
-		if (argv[i][0] == '-' && argv[i][1] == '-')
+		if (argv[i][0] == '-')
 		{
-			if (strcmp(&argv[i][2], "timing-mode") == 0)
-			{
-				cout << "Timing mode on\n";
-				timing_mode = true;
+			if (argv[i][1] == '-') {
+				if (strcmp(&argv[i][2], "timing-mode") == 0)
+				{
+					cout << "Timing mode on\n";
+					timing_mode = true;
+				}
+				else if (strcmp(&argv[i][2], "help") == 0)
+				{
+					cout << "Usage: " << argv[0] << " [--help] [--timing-mode] [scenario]" << endl;
+					return 0;
+				}
+				else
+				{
+					cerr << "Unrecognized command: \"" << argv[i] << "\". Ignoring ..." << endl;
+				}
 			}
-			else if (strcmp(&argv[i][2], "help") == 0)
-			{
-				cout << "Usage: " << argv[0] << " [--help] [--timing-mode] [scenario]" << endl;
-				return 0;
+			else if (strcmp(&argv[i][1], "seq") == 0) {
+				implementation = Ped::IMPLEMENTATION::SEQ;
+				cout << "Implementation: " << "Sequential, no collision" << endl;
 			}
-			else
-			{
-				cerr << "Unrecognized command: \"" << argv[i] << "\". Ignoring ..." << endl;
+			else if (strcmp(&argv[i][1], "thr") == 0) {
+				implementation = Ped::IMPLEMENTATION::PTHREAD;
+				cout << "Implementation: " << "Threads, no collision" << endl;
+			}
+			else if (strcmp(&argv[i][1], "omp") == 0) {
+				implementation = Ped::IMPLEMENTATION::OMP;
+				cout << "Implementation: " << "OpenMP, no collision" << endl;
+			}
+			else if (strcmp(&argv[i][1], "vec") == 0) {
+				implementation = Ped::IMPLEMENTATION::VECTOR;
+				cout << "Implementation: " << "Vectorized, no collision" << endl;
+			}
+			else if (strcmp(&argv[i][1], "ocl") == 0) {
+				implementation = Ped::IMPLEMENTATION::OCL;
+				cout << "Implementation: " << "OpenCL, no collision" << endl;
+			}
+			else if (strcmp(&argv[i][1], "seq_col") == 0) {
+				implementation = Ped::IMPLEMENTATION::SEQ_COL;
+				cout << "Implementation: " << "Sequential, with collision" << endl;
+			}
+			else if (strcmp(&argv[i][1], "omp_col") == 0) {
+				implementation = Ped::IMPLEMENTATION::OMP_COL;
+				cout << "Implementation: " << "OpenMP, with collision" << endl;
 			}
 		}
 		else // Assume it is a path to scenefile
@@ -55,11 +86,11 @@ int main(int argc, char*argv[]) {
 
 		i += 1;
 	}
-	
+
 	// Reading the scenario file and setting up the crowd simulation model
 	Ped::Model model;
 	ParseScenario parser(scenefile);
-	model.setup(parser.getAgents());
+	model.setup(parser.getAgents(), implementation);
 
 	// GUI related set ups
 	QApplication app(argc, argv);
@@ -70,7 +101,7 @@ int main(int argc, char*argv[]) {
 	PedSimulation *simulation = new PedSimulation(model, mainwindow);
 
 	cout << "Demo setup complete, running ..." << endl;
-	
+
 	int retval = 0;
 	// Timing of simulation
 
@@ -89,7 +120,7 @@ int main(int argc, char*argv[]) {
 		simulation->runSimulationWithQt(maxNumberOfStepsToSimulate);
 		retval = app.exec();
 	}
-	
+
 	// End timing
 	GetSystemTime(&stop);
 
@@ -98,7 +129,7 @@ int main(int argc, char*argv[]) {
 	cout << "Time: min,sek,milli " << stop.wMinute - start.wMinute << ":" << stop.wSecond - start.wSecond << "." << stop.wMilliseconds - start.wMilliseconds << endl;
 	cout << "Done" << endl;
 	cout << "Type Enter to quit.." << endl;
-	
+
 	getchar(); // Wait for any key. Windows convenience...
 	delete (simulation);
 	return retval;

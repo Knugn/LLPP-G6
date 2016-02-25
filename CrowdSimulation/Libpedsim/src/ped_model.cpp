@@ -74,7 +74,7 @@ void setupOpenClProgram() {
 
 }
 
-void Ped::Model::setup(const std::vector<Ped::Tagent*> &agentsInScenario)
+void Ped::Model::setup(const std::vector<Ped::Tagent*> &agentsInScenario, IMPLEMENTATION implementation)
 {
 	agents = std::vector<Ped::Tagent*>(agentsInScenario.begin(), agentsInScenario.end());
 	int size = agents.size();
@@ -118,8 +118,9 @@ void Ped::Model::setup(const std::vector<Ped::Tagent*> &agentsInScenario)
 	//implementation = OMP;
 	//implementation = VECTOR;
 	//implementation = OCL;
-	implementation = SEQ_COL;
+	//implementation = SEQ_COL;
 	//implementation = OMP_COL;
+	this->implementation = implementation;
 
 
 	// Set up heatmap (relevant for Assignment 4)
