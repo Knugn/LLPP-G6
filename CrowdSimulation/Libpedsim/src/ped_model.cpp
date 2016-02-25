@@ -34,22 +34,22 @@ cl::Kernel clKernel;
 cl::CommandQueue clQueue;
 cl::Buffer xPosBuffer, yPosBuffer, xDestBuffer, yDestBuffer, rDestBuffer;
 
-int maxX = 0;
-int maxY = 0;
-int minX = 0;
-int minY = 0;
-std::pair <int, int> pairReturned;
+//int maxX = 0;
+//int maxY = 0;
+//int minX = 0;
+//int minY = 0;
+//std::pair <int, int> pairReturned;
 
-std::vector<int> regionX;
-std::vector<int> regionY;
+//std::vector<int> regionX;
+//std::vector<int> regionY;
 
-vector<int> combinedVec;
+//vector<int> combinedVec;
 
-std::vector<int> areaBelong;
-std::vector<Ped::Tagent*> agentBelong;
-std::vector<int> agentsOnBorder;
-std::vector<int> agentsInside;
-std::vector<int> lastKnownRegion; //if it is on the border it will belong to the old region until it goes to the new one
+//std::vector<int> areaBelong;
+//std::vector<Ped::Tagent*> agentBelong;
+//std::vector<int> agentsOnBorder;
+//std::vector<int> agentsInside;
+//std::vector<int> lastKnownRegion; //if it is on the border it will belong to the old region until it goes to the new one
 
 void setupOpenClProgram() {
 	clDevice = Ped::OpenClUtils::getDefaultDevice();
@@ -80,7 +80,7 @@ void Ped::Model::setup(const std::vector<Ped::Tagent*> &agentsInScenario, IMPLEM
 	int size = agents.size();
 	nRegions = size / 50 + 1;
 	std::cout << "number of regions are: " << nRegions << " number of agents are " << size << std::endl;
-	//nRegions = 6;
+
 	xPosistions = (int *)_aligned_malloc(size * sizeof(int), 64);
 	int * yPosistions = (int *)_aligned_malloc(size * sizeof(int), 64);
 
@@ -97,21 +97,20 @@ void Ped::Model::setup(const std::vector<Ped::Tagent*> &agentsInScenario, IMPLEM
 
 
 	for (int i = 0; i < size; i++){
-		pairReturned = agents[i]->initValues(&(xPosistions[i]), &(yPosistions[i]), &(destination[i]), &(destX[i]), &(destY[i]), &(destR[i]), &(waypoints[i]), &(desiredX[i]), &(desiredY[i]));
-
+		agents[i]->initValues(&(xPosistions[i]), &(yPosistions[i]), &(destination[i]), &(destX[i]), &(destY[i]), &(destR[i]), &(waypoints[i]), &(desiredX[i]), &(desiredY[i]));
 	}
 	
 	
 	treehash = new std::map<const Ped::Tagent*, Ped::Ttree*>();
 
-
 	// Create a new quadtree containing all agents
 	tree = new Ttree(NULL, treehash, 0, treeDepth, 0, 0, 1000, 800);
-	
-	for (std::vector<Ped::Tagent*>::iterator it = agents.begin(); it != agents.end(); ++it)
-	{
+	chunks = new Tchunks(0,0,3,3,1000/3,800/3);
+	for (std::vector<Ped::Tagent*>::iterator it = agents.begin(); it != agents.end(); ++it) {
 		tree->addAgent(*it);
+		chunks->addAgent(*it);
 	}
+
 	// This is the sequential implementation
 	//implementation = SEQ;
 	//implementation = PTHREAD;
@@ -292,7 +291,6 @@ void Ped::Model::tick_seq_col(){
 
 void Ped::Model::tick_openmp_col(){
 
-
 	int size = agents.size();
 
 	for (int i = 0; i < size; i++) {
@@ -302,14 +300,13 @@ void Ped::Model::tick_openmp_col(){
 	std::vector<std::vector<Tagent *>> regions(nRegions);
 	std::sort(vec.begin(), vec.end());
 	std::vector<int> regionsPos(nRegions + 1);
+	const int minRegionWidth = chunks->chunkSizeX+1;
 	for (int i = 0; i < nRegions; i++){
 		regionsPos[i] = vec[(size*i) / nRegions];
-		if (i != 0 && regionsPos[i] - regionsPos[i - 1] <= 1){
-			regionsPos[i] = regionsPos[i - 1] + 2;
+		if (i != 0 && regionsPos[i] - regionsPos[i - 1] < minRegionWidth){
+			regionsPos[i] = regionsPos[i - 1] + minRegionWidth;
 		}
-		//std::cout << regionsPos[i] << " ";
 	}
-
 	//regionsPos[nRegions] = vec[size - 1] + 1;
 	regionsPos[nRegions] = std::numeric_limits<int>::max();
 	
@@ -322,18 +319,20 @@ void Ped::Model::tick_openmp_col(){
 		}
 	}
 
-
 	#pragma omp parallel 
 	{
-		#pragma omp for schedule(dynamic,1)
-		for (int i = 0; i < nRegions; i += 2){
-			moveRegion(regions[i]);
+
+		for (int parity=0; parity < 2; parity++) {
+			#pragma omp for schedule(dynamic,1)
+			for (int i = parity; i < nRegions; i += 2){
+				moveRegion(regions[i]);
+			}
 		}
 		
-		#pragma omp for schedule(dynamic,1)
-		for (int i = 1; i < nRegions; i += 2){
-			moveRegion(regions[i]);
-		}
+		//#pragma omp for schedule(dynamic,1)
+		//for (int i = 1; i < nRegions; i += 2){
+		//	moveRegion(regions[i]);
+		//}
 	}
 
 
@@ -380,7 +379,8 @@ void Ped::Model::moveRegion(std::vector<Ped::Tagent *> regionAgents){
 void Ped::Model::move(Ped::Tagent *agent)
 {
 	// Search for neighboring agents
-	set<const Ped::Tagent *> neighbors = getNeighbors(agent->x[0], agent->y[0], 2);
+	//set<const Ped::Tagent *> neighbors = getNeighbors(agent->x[0], agent->y[0], 1);
+	set<const Ped::Tagent *> neighbors =getNeighborsFromChunks(agent->getX(), agent->getY(), 1);
 
 	// Retrieve their positions
 	std::vector<std::pair<int, int> > takenPositions;
@@ -418,17 +418,26 @@ void Ped::Model::move(Ped::Tagent *agent)
 		// If the current position is not yet taken by any neighbor
 		if (std::find(takenPositions.begin(), takenPositions.end(), *it) == takenPositions.end()) {
 
+			int oldX = agent->getX();
+			int oldY = agent->getY();
 			// Set the agent's position 
-			//agent->setX((*it).first);
-			//agent->setY((*it).second);
-			agent->x[0] = (*it).first;
-			agent->y[0] = (*it).second;
+			agent->setX((*it).first);
+			agent->setY((*it).second);
+			//*(agent->x) = (*it).first;
+			//*(agent->y) = (*it).second;
 
 			// Update the quadtree
-			(*treehash)[agent]->moveAgent(agent);
+			//(*treehash)[agent]->moveAgent(agent);
+			chunks->moveAgent(agent, oldX, oldY);
 			break;
 		}
 	}
+}
+
+set<const Ped::Tagent*> Ped::Model::getNeighborsFromChunks(int x, int y, int r) const {
+	list<const Ped::Tagent*> neighborList;
+	chunks->getAgents(x,y,r,neighborList);
+	return set<const Ped::Tagent*>(neighborList.begin(), neighborList.end());
 }
 
 /// Returns the list of neighbors within dist of the point x/y. This

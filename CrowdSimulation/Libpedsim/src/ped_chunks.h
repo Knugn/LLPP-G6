@@ -11,10 +11,11 @@ namespace Ped {
 	class Tagent;
 
 	class Tchunks {
+	public:
+		const int chunkSizeX, chunkSizeY;
+		const int xOffset, yOffset;
+		const int nChunksX, nChunksY;
 	private:
-		int chunkSizeX, chunkSizeY;
-		int xOffset, yOffset;
-		int nChunksX, nChunksY;
 		std::set<const Ped::Tagent*>* agents;
 
 	public:
@@ -36,6 +37,9 @@ namespace Ped {
 		
 		// Removes agent a from the chunk containing the agents coordinates.
 		virtual bool removeAgent(const Ped::Tagent *a);
+
+		// Moves an agent to its a new chunk if it crossed a chunk border.
+		virtual bool moveAgent(const Ped::Tagent *a, int oldX, int oldY);
 
 		// Returns the set of agents that is stored within this tree
 		virtual set<const Ped::Tagent*> getAgents(int chunkIdxX, int chunkIdxY) const;

@@ -7,13 +7,15 @@
 
 using namespace std;
 
-Ped::Tchunks::Tchunks(int xOffset, int yOffset, int chunkSizeX, int chunkSizeY, int nChunksX, int nChunksY) {
-	this->xOffset = xOffset;
-	this->yOffset = yOffset;
-	this->chunkSizeX = chunkSizeX;
-	this->chunkSizeY = chunkSizeY;
-	this->nChunksX = nChunksX;
-	this->nChunksY = nChunksY;
+Ped::Tchunks::Tchunks(int xOffset, int yOffset, int chunkSizeX, int chunkSizeY, int nChunksX, int nChunksY) :
+	xOffset(xOffset), yOffset(yOffset), chunkSizeX(chunkSizeX), chunkSizeY(chunkSizeY), nChunksX(nChunksX), nChunksY(nChunksY)
+{
+	//this->xOffset = xOffset;
+	//this->yOffset = yOffset;
+	//this->chunkSizeX = chunkSizeX;
+	//this->chunkSizeY = chunkSizeY;
+	//this->nChunksX = nChunksX;
+	//this->nChunksY = nChunksY;
 	agents = new std::set<const Ped::Tagent*>[nChunksX*nChunksY];
 }
 
@@ -79,7 +81,6 @@ void Ped::Tchunks::addAgent(const Ped::Tagent *a) {
 	chunkAgents.insert(a);
 }
 
-
 bool Ped::Tchunks::removeAgent(const Ped::Tagent *a) {
 	int chunkIndex = getChunkIndexFromPosition(a->getX(), a->getY());
 	set<const Ped::Tagent*> chunkAgents = agents[chunkIndex];
@@ -87,6 +88,20 @@ bool Ped::Tchunks::removeAgent(const Ped::Tagent *a) {
 	return (removedCount > 0);
 }
 
+bool Ped::Tchunks::moveAgent(const Ped::Tagent *a, int oldX, int oldY) {
+	int chunkIdxXOld = getChunkIndexX(oldX);
+	int chunkIdxXNew = getChunkIndexX(a->getX());
+	int chunkIdxYOld = getChunkIndexX(oldY);
+	int chunkIdxYNew = getChunkIndexX(a->getY());
+	if (chunkIdxXOld != chunkIdxXNew || chunkIdxYOld != chunkIdxYNew) {
+		int oldChunkIdx = getChunkIndex(chunkIdxXOld, chunkIdxYOld);
+		int newChunkIdx = getChunkIndex(chunkIdxXNew, chunkIdxYNew);
+		agents[oldChunkIdx].erase(a);
+		agents[newChunkIdx].insert(a);
+		return true;
+	}
+	return false;
+}
 
 set<const Ped::Tagent*> Ped::Tchunks::getAgents(int chunkIdxX, int chunkIdxY) const {
 	int chunkIndex = getChunkIndex(chunkIdxX, chunkIdxY);
