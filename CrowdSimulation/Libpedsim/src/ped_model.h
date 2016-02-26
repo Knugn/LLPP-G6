@@ -28,7 +28,7 @@ namespace Ped{
 	class Twaypoint;
 	// The implementation modes for Assignment 1 + 2:
 	// chooses which implementation to use for tick()
-	enum IMPLEMENTATION {OCL, CUDA, VECTOR, OMP, PTHREAD, SEQ, SEQ_COL, OMP_COL};
+	enum IMPLEMENTATION {OCL, VECTOR, OMP, PTHREAD, SEQ, SEQ_COL, OMP_COL};
 
 	class Model
 	{

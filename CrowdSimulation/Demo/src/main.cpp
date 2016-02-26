@@ -52,31 +52,24 @@ int main(int argc, char*argv[]) {
 			}
 			else if (strcmp(&argv[i][1], "seq") == 0) {
 				implementation = Ped::IMPLEMENTATION::SEQ;
-				cout << "Implementation: " << "Sequential, no collision" << endl;
 			}
 			else if (strcmp(&argv[i][1], "thr") == 0) {
 				implementation = Ped::IMPLEMENTATION::PTHREAD;
-				cout << "Implementation: " << "Threads, no collision" << endl;
 			}
 			else if (strcmp(&argv[i][1], "omp") == 0) {
 				implementation = Ped::IMPLEMENTATION::OMP;
-				cout << "Implementation: " << "OpenMP, no collision" << endl;
 			}
 			else if (strcmp(&argv[i][1], "vec") == 0) {
 				implementation = Ped::IMPLEMENTATION::VECTOR;
-				cout << "Implementation: " << "Vectorized, no collision" << endl;
 			}
 			else if (strcmp(&argv[i][1], "ocl") == 0) {
 				implementation = Ped::IMPLEMENTATION::OCL;
-				cout << "Implementation: " << "OpenCL, no collision" << endl;
 			}
 			else if (strcmp(&argv[i][1], "seq_col") == 0) {
 				implementation = Ped::IMPLEMENTATION::SEQ_COL;
-				cout << "Implementation: " << "Sequential, with collision" << endl;
 			}
 			else if (strcmp(&argv[i][1], "omp_col") == 0) {
 				implementation = Ped::IMPLEMENTATION::OMP_COL;
-				cout << "Implementation: " << "OpenMP, with collision" << endl;
 			}
 		}
 		else // Assume it is a path to scenefile
@@ -85,6 +78,35 @@ int main(int argc, char*argv[]) {
 		}
 
 		i += 1;
+	}
+
+	cout << "Scenario: " << scenefile.toStdString() << endl;
+	switch (implementation)
+	{
+	case Ped::OCL:
+		cout << "Implementation: " << "OpenCL, no collision" << endl;
+		break;
+	case Ped::VECTOR:
+		cout << "Implementation: " << "Vectorized, no collision" << endl;
+		break;
+	case Ped::OMP:
+		cout << "Implementation: " << "OpenMP, no collision" << endl;
+		break;
+	case Ped::PTHREAD:
+		cout << "Implementation: " << "Threads, no collision" << endl;
+		break;
+	case Ped::SEQ:
+		cout << "Implementation: " << "Sequential, no collision" << endl;
+		break;
+	case Ped::SEQ_COL:
+		cout << "Implementation: " << "Sequential, with collision" << endl;
+		break;
+	case Ped::OMP_COL:
+		cout << "Implementation: " << "OpenMP, with collision" << endl;
+		break;
+	default:
+		cout << "Implementation: " << "???" << endl;
+		break;
 	}
 
 	// Reading the scenario file and setting up the crowd simulation model
@@ -126,7 +148,7 @@ int main(int argc, char*argv[]) {
 
 	WORD duration = (stop.wMinute - start.wMinute) * 60000 + (stop.wSecond - start.wSecond) * 1000 + (stop.wMilliseconds - start.wMilliseconds);
 	cout << "Time: " << duration <<  " milliseconds." << endl;
-	cout << "Time: min,sek,milli " << stop.wMinute - start.wMinute << ":" << stop.wSecond - start.wSecond << "." << stop.wMilliseconds - start.wMilliseconds << endl;
+	cout << "Time (min:sec.millis): " << stop.wMinute - start.wMinute << ":" << stop.wSecond - start.wSecond << "." << stop.wMilliseconds - start.wMilliseconds << endl;
 	cout << "Done" << endl;
 	cout << "Type Enter to quit.." << endl;
 

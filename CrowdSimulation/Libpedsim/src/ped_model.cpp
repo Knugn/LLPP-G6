@@ -34,22 +34,21 @@ cl::Kernel clKernel;
 cl::CommandQueue clQueue;
 cl::Buffer xPosBuffer, yPosBuffer, xDestBuffer, yDestBuffer, rDestBuffer;
 
-//int maxX = 0;
-//int maxY = 0;
-//int minX = 0;
-//int minY = 0;
-//std::pair <int, int> pairReturned;
 
-//std::vector<int> regionX;
-//std::vector<int> regionY;
+Ped::Model::~Model()
+{
+	if (tree != NULL)
+	{
+		delete tree;
+		tree = NULL;
+	}
+	if (treehash != NULL)
+	{
+		delete treehash;
+		treehash = NULL;
+	}
+}
 
-//vector<int> combinedVec;
-
-//std::vector<int> areaBelong;
-//std::vector<Ped::Tagent*> agentBelong;
-//std::vector<int> agentsOnBorder;
-//std::vector<int> agentsInside;
-//std::vector<int> lastKnownRegion; //if it is on the border it will belong to the old region until it goes to the new one
 
 void setupOpenClProgram() {
 	clDevice = Ped::OpenClUtils::getDefaultDevice();
@@ -79,7 +78,9 @@ void Ped::Model::setup(const std::vector<Ped::Tagent*> &agentsInScenario, IMPLEM
 	agents = std::vector<Ped::Tagent*>(agentsInScenario.begin(), agentsInScenario.end());
 	int size = agents.size();
 	nRegions = size / 50 + 1;
-	std::cout << "number of regions are: " << nRegions << " number of agents are " << size << std::endl;
+	std::cout << "Number of agents: " << size << std::endl;
+	std::cout << "Number of regions: " << nRegions << std::endl;
+	
 
 	xPosistions = (int *)_aligned_malloc(size * sizeof(int), 64);
 	int * yPosistions = (int *)_aligned_malloc(size * sizeof(int), 64);
@@ -111,7 +112,6 @@ void Ped::Model::setup(const std::vector<Ped::Tagent*> &agentsInScenario, IMPLEM
 		chunks->addAgent(*it);
 	}
 
-	// This is the sequential implementation
 	//implementation = SEQ;
 	//implementation = PTHREAD;
 	//implementation = OMP;
@@ -203,7 +203,6 @@ void Ped::Model::tick_vector() {
 }
 
 
-
 void Ped::Model::tick_opencl() {
 	int nAgents = agents.size();
 	for (int i = 0; i < nAgents; i++) {
@@ -268,15 +267,12 @@ void Ped::Model::tick_opencl() {
 	const char* readBuffErrMsg = "Failed to read buffers back to host.";
 	err = clQueue.enqueueReadBuffer(xPosBuffer, CL_FALSE, 0, sizeof(int)*nAgents, agents[0]->x);
 	Ped::OpenClUtils::checkErr(err, readBuffErrMsg);
-	err = clQueue.enqueueReadBuffer(yPosBuffer, CL_TRUE, 0, sizeof(int)*nAgents, agents[0]->y); //blocking
+	err = clQueue.enqueueReadBuffer(yPosBuffer, /*blocking=*/CL_TRUE, 0, sizeof(int)*nAgents, agents[0]->y); 
 	Ped::OpenClUtils::checkErr(err, readBuffErrMsg);
-
-	//std::cout << "Tick with OpenCL completed." << std::endl;
 }
 
 
-void Ped::Model::tick_seq_col(){
-
+void Ped::Model::tick_seq_col() {
 
 	int size = agents.size();
 	for (int i = 0; i < size; i++) {
@@ -289,7 +285,7 @@ void Ped::Model::tick_seq_col(){
 }
 
 
-void Ped::Model::tick_openmp_col(){
+void Ped::Model::tick_openmp_col() {
 
 	int size = agents.size();
 
@@ -321,21 +317,14 @@ void Ped::Model::tick_openmp_col(){
 
 	#pragma omp parallel 
 	{
-
 		for (int parity=0; parity < 2; parity++) {
 			#pragma omp for schedule(dynamic,1)
 			for (int i = parity; i < nRegions; i += 2){
 				moveRegion(regions[i]);
 			}
 		}
-		
-		//#pragma omp for schedule(dynamic,1)
-		//for (int i = 1; i < nRegions; i += 2){
-		//	moveRegion(regions[i]);
-		//}
 	}
-
-
+	
 }
 
 void Ped::Model::tick()
@@ -363,8 +352,7 @@ void Ped::Model::tick()
 		break;
 	case Ped::OMP_COL:
 		tick_openmp_col();
-		break;	
-	case Ped::CUDA:
+		break;
 	default:
 		throw new std::runtime_error("Not implemented: " + implementation);
 		break;
@@ -423,8 +411,6 @@ void Ped::Model::move(Ped::Tagent *agent)
 			// Set the agent's position 
 			agent->setX((*it).first);
 			agent->setY((*it).second);
-			//*(agent->x) = (*it).first;
-			//*(agent->y) = (*it).second;
 
 			// Update the quadtree
 			//(*treehash)[agent]->moveAgent(agent);
@@ -491,78 +477,3 @@ void Ped::Model::getNeighbors(list<const Ped::Tagent*>& neighborList, int x, int
 		}
 	}
 }
-
-Ped::Model::~Model()
-{
-	if (tree != NULL)
-	{
-		delete tree;
-		tree = NULL;
-	}
-	if (treehash != NULL)
-	{
-		delete treehash;
-		treehash = NULL;
-	}
-}
-
-
-
-
-////////////
-/// Everything below here relevant for Assignment 3.
-/// Don't use this for Assignment 1!
-///////////////////////////////////////////////
-/*void Ped::Model::moveNew(Ped::Tagent *agent)
-{
-	// Search for neighboring agents
-	set<const Ped::Tagent *> neighbors = getNeighbors(agent->x[0], agent->y[0], 2);
-
-	// Retrieve their positions
-	std::vector<std::pair<int, int> > takenPositions;
-	for (std::set<const Ped::Tagent*>::iterator neighborIt = neighbors.begin(); neighborIt != neighbors.end(); ++neighborIt) {
-		std::pair<int, int> position((*neighborIt)->getX(), (*neighborIt)->getY());
-		takenPositions.push_back(position);
-	}
-
-	// Compute the three alternative positions that would bring the agent
-	// closer to his desiredPosition, starting with the desiredPosition itself
-	std::vector<std::pair<int, int> > prioritizedAlternatives;
-	std::pair<int, int> pDesired(agent->desX[0], agent->desY[0]);
-	prioritizedAlternatives.push_back(pDesired);
-
-	int diffX = pDesired.first - agent->x[0];
-	int diffY = pDesired.second - agent->y[0];
-	std::pair<int, int> p1, p2;
-	if (diffX == 0 || diffY == 0)
-	{
-		// Agent wants to walk straight to North, South, West or East
-		p1 = std::make_pair(pDesired.first + diffY, pDesired.second + diffX);
-		p2 = std::make_pair(pDesired.first - diffY, pDesired.second - diffX);
-	}
-	else {
-		// Agent wants to walk diagonally
-		p1 = std::make_pair(pDesired.first, agent->y[0]);
-		p2 = std::make_pair(agent->x[0], pDesired.second);
-	}
-	prioritizedAlternatives.push_back(p1);
-	prioritizedAlternatives.push_back(p2);
-
-	// Find the first empty alternative position
-	for (std::vector<pair<int, int> >::iterator it = prioritizedAlternatives.begin(); it != prioritizedAlternatives.end(); ++it) {
-
-		// If the current position is not yet taken by any neighbor
-		if (std::find(takenPositions.begin(), takenPositions.end(), *it) == takenPositions.end()) {
-
-			// Set the agent's position 
-			//agent->setX((*it).first);
-			//agent->setY((*it).second);
-			agent->x[0] = (*it).first;
-			agent->y[0] = (*it).second;
-
-			// Update the quadtree
-			(*treehash)[agent]->moveAgent(agent);
-			break;
-		}
-	}
-}*/
