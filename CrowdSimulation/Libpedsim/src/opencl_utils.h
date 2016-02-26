@@ -9,6 +9,8 @@ namespace Ped {
 		cl::Platform const getDefaultPlatform();
 		cl::Device const getDefaultDevice();
 		cl::Context const createDefaultDeviceContext();
+
+		void printDeviceInfo(cl::Device device);
 	}
 }
 

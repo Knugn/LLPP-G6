@@ -8,7 +8,7 @@
 namespace Ped {
 
 	namespace OpenClUtils {
-		//
+		
 		cl::Platform const getDefaultPlatform() {
 			std::vector<cl::Platform> all_platforms;
 			cl::Platform::get(&all_platforms);
@@ -36,13 +36,48 @@ namespace Ped {
 			return context;
 		}
 
+		void printDeviceInfo(cl::Device device) {
+			cl_int err;
+			std::cout << "Listing device info ..." << std::endl;
+
+			auto name = device.getInfo<CL_DEVICE_NAME>(&err);
+			checkErr(err, "Failed to get device name.");
+			std::cout << "Device name: " << name << std::endl;
+			
+			auto type = device.getInfo<CL_DEVICE_TYPE>(&err);
+			checkErr(err, "Failed to get device type.");
+			std::string type_human_readable;
+			if (type == CL_DEVICE_TYPE_GPU)
+				type_human_readable = "GPU";
+			else if (type == CL_DEVICE_TYPE_CPU)
+				type_human_readable = "CPU";
+			else
+				type_human_readable = "? (Not CPU or GPU)";
+			std::cout << "Device type: " << type_human_readable << std::endl;
+
+			auto device_version = device.getInfo<CL_DEVICE_VERSION>(&err);
+			checkErr(err, "Failed to get device version.");
+			std::cout << "Device version: " << device_version << std::endl;
+
+			auto opencl_c_version = device.getInfo<CL_DEVICE_OPENCL_C_VERSION>(&err);
+			checkErr(err, "Failed to get device OpenCL C version.");
+			std::cout << "Device OpenCL C version: " << opencl_c_version << std::endl;
+
+			auto driver_version = device.getInfo<CL_DRIVER_VERSION>(&err);
+			checkErr(err, "Failed to get driver version.");
+			std::cout << "Driver version: " << driver_version << std::endl;
+
+			auto max_compute_units = device.getInfo<CL_DEVICE_MAX_COMPUTE_UNITS>(&err);
+			checkErr(err, "Failed to get max compute units.");
+			std::cout << "Max compute units: " << max_compute_units << std::endl;
+		}
+
 		void checkErr(cl_int err, const char * msg) {
 			if (err != CL_SUCCESS) {
 				std::cerr << "OpenCL ERROR ("<<err<<+"): " << msg  << std::endl;
 				std::cout << "Press any key to exit." << std::endl;
 				std::getchar();
 				exit(EXIT_FAILURE);
-				//throw EXIT_FAILURE;
 			}
 		}
 
