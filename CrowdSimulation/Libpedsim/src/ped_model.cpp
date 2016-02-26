@@ -52,6 +52,7 @@ Ped::Model::~Model()
 
 void setupOpenClProgram() {
 	clDevice = Ped::OpenClUtils::getDefaultDevice();
+	Ped::OpenClUtils::printDeviceInfo(clDevice);
 	clContext = Ped::OpenClUtils::createDefaultDeviceContext();
 	std::string kernelPath = "..\\Libpedsim\\res\\tick_scalar.cl";
 	std::ifstream kernelFile(kernelPath);
@@ -65,12 +66,8 @@ void setupOpenClProgram() {
 	devices.push_back(clDevice);
 	cl_int err = clProgram.build(devices);
 	Ped::OpenClUtils::checkErr(err, ("Failed to build program. Build log: \n" + clProgram.getBuildInfo<CL_PROGRAM_BUILD_LOG>(clDevice)).c_str());
-	//if (clProgram.build(devices) != CL_SUCCESS) {
-	//	std::cout << " Error building: " << clProgram.getBuildInfo<CL_PROGRAM_BUILD_LOG>(clDevice) << std::endl;
-	//	exit(1);
-	//}
-	std::cout << "Successfully built cl program." << std::endl;
 
+	std::cout << "Successfully built cl program." << std::endl;
 }
 
 void Ped::Model::setup(const std::vector<Ped::Tagent*> &agentsInScenario, IMPLEMENTATION implementation)
