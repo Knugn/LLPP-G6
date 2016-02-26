@@ -13,6 +13,7 @@
   <ItemGroup>
     <ClInclude Include="src\opencl_utils.h" />
     <ClInclude Include="src\ped_agent.h" />
+    <ClInclude Include="src\ped_chunks.h" />
     <ClInclude Include="src\ped_model.h" />
     <ClInclude Include="src\ped_tree.h" />
     <ClInclude Include="src\ped_utils.h" />
@@ -22,6 +23,7 @@
     <ClCompile Include="src\heatmap_seq.cpp" />
     <ClCompile Include="src\opencl_utils.cpp" />
     <ClCompile Include="src\ped_agent.cpp" />
+    <ClCompile Include="src\ped_chunks.cpp" />
     <ClCompile Include="src\ped_model.cpp" />
     <ClCompile Include="src\ped_tree.cpp" />
     <ClCompile Include="src\ped_utils.cpp" />

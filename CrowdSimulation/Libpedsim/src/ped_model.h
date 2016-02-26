@@ -15,6 +15,7 @@
 #include <map>
 
 #include "ped_tree.h"
+#include "ped_chunks.h"
 #include "ped_agent.h"
 #include "ped_waypoint.h"
 #include <algorithm>
@@ -23,6 +24,7 @@
 namespace Ped{
 	class Tagent;
 	class Ttree;
+	class Tchunks;
 	class Twaypoint;
 	// The implementation modes for Assignment 1 + 2:
 	// chooses which implementation to use for tick()
@@ -35,7 +37,7 @@ namespace Ped{
 
 
 		// Sets everything up
-		void setup(const std::vector<Tagent*> &agentsInScenario);
+		void setup(const std::vector<Tagent*> &agentsInScenario, IMPLEMENTATION implementation);
 
 		// Coordinates a time step in the scenario: move all agents by one step (if applicable).
 		void tick();
@@ -95,9 +97,13 @@ namespace Ped{
 		// for faster neighbor search in 
 		Ped::Ttree *tree;
 
+		Ped::Tchunks *chunks;
+
 		// Maps the agent to the tree node containing it. Convenience data structure
 		// in order to update the tree in case the agent moves.
 		std::map<const Ped::Tagent*, Ped::Ttree*> *treehash;
+
+		set<const Ped::Tagent*> getNeighborsFromChunks(int x, int y, int dist) const;
 
 		// Returns the set of neighboring agents for the specified position
 		set<const Ped::Tagent*> getNeighbors(int x, int y, int dist) const;
