@@ -1,9 +1,9 @@
 
 __kernel void agent_move(__global int * xPos, 
 						 __global int * yPos,
-						 __global const int * xDest,
-						 __global const int * yDest,
-						 __global const float * rDest,
+						 __constant int * xDest,
+						 __constant int * yDest,
+						 __constant float * rDest,
 						 const int nAgents) 
 {
 	int gid = get_global_id(0);
