@@ -29,6 +29,7 @@ int main(int argc, char* argv[]) {
 	Ped::IMPLEMENTATION implementation = Ped::IMPLEMENTATION::SEQ;
 	int maxNumberOfStepsToSimulate = 10000;
 	bool timing_mode = false;
+	bool heatmapEnabled = false;
 	
 	// Argument handling
 	for (int i=1; i < argc; i++)
@@ -49,6 +50,9 @@ int main(int argc, char* argv[]) {
 			}
 			else if (strncmp(&argv[i][1], "ticks=", 6) == 0) {
 				maxNumberOfStepsToSimulate = atoi(&argv[i][7]);
+			}
+			else if (strcmp(&argv[i][1], "heatmap") == 0 || strcmp(&argv[i][1], "hm") == 0) {
+				heatmapEnabled = true;
 			}
 			else if (strcmp(&argv[i][1], "seq") == 0) {
 				implementation = Ped::IMPLEMENTATION::SEQ;
@@ -114,12 +118,17 @@ int main(int argc, char* argv[]) {
 	if (timing_mode)
 		cout << "Timing mode enabled." << endl;
 
+	if (heatmapEnabled)
+		cout << "Heatmap enabled." << endl;
+	else
+		cout << "Heatmap disabled." << endl;
+
 	cout << "Number of ticks to simulate: " << maxNumberOfStepsToSimulate << endl;
 
 	// Reading the scenario file and setting up the crowd simulation model
 	Ped::Model model;
 	ParseScenario parser(scenefile);
-	model.setup(parser.getAgents(), implementation);
+	model.setup(parser.getAgents(), implementation, heatmapEnabled);
 
 	// GUI related set ups
 	QApplication app(argc, argv);

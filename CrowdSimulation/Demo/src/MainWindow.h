@@ -14,7 +14,7 @@ class QGraphicsView;
 ////////////
 /// Comment in for Assignment 4
 ///////////////////////////////////////////////
-// #define ASSIGNMENT_4
+#define ASSIGNMENT_4
 
 class MainWindow : public QMainWindow {
 private:

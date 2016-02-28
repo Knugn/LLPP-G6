@@ -19,13 +19,13 @@
 #include "ped_agent.h"
 #include "ped_waypoint.h"
 #include <algorithm>
-//#include "voronoi.h"
 
 namespace Ped{
 	class Tagent;
 	class Ttree;
 	class Tchunks;
 	class Twaypoint;
+
 	// The implementation modes for Assignment 1 + 2:
 	// chooses which implementation to use for tick()
 	enum IMPLEMENTATION {OCL, VECTOR, OMP, PTHREAD, SEQ, SEQ_COL, OMP_COL};
@@ -34,10 +34,10 @@ namespace Ped{
 	{
 	public:
 
-
+		~Model();
 
 		// Sets everything up
-		void setup(const std::vector<Tagent*> &agentsInScenario, IMPLEMENTATION implementation);
+		void setup(const std::vector<Tagent*> &agentsInScenario, IMPLEMENTATION implementation, bool heatmapEnabled = false);
 
 		// Coordinates a time step in the scenario: move all agents by one step (if applicable).
 		void tick();
@@ -53,7 +53,7 @@ namespace Ped{
 
 		// Cleans up the tree and restructures it. Worth calling every now and then.
 		void cleanup();
-		~Model();
+		
 
 		// Returnst the heatmap visualizing the density of agents
 		int const * const * getHeatmap() const { return blurred_heatmap; };
@@ -115,6 +115,8 @@ namespace Ped{
 #define SIZE 1024
 #define CELLSIZE 5
 #define SCALED_SIZE SIZE*CELLSIZE
+
+		bool heatmapEnabled;
 
 		// The heatmap representing the density of agents
 		int ** heatmap;

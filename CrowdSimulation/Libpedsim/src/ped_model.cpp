@@ -70,7 +70,7 @@ void setupOpenClProgram() {
 	std::cout << "Successfully built cl program." << std::endl;
 }
 
-void Ped::Model::setup(const std::vector<Ped::Tagent*> &agentsInScenario, IMPLEMENTATION implementation)
+void Ped::Model::setup(const std::vector<Ped::Tagent*> &agentsInScenario, IMPLEMENTATION implementation, bool heatmapEnabled)
 {
 	agents = std::vector<Ped::Tagent*>(agentsInScenario.begin(), agentsInScenario.end());
 	int size = agents.size();
@@ -109,17 +109,11 @@ void Ped::Model::setup(const std::vector<Ped::Tagent*> &agentsInScenario, IMPLEM
 		chunks->addAgent(*it);
 	}
 
-	//implementation = SEQ;
-	//implementation = PTHREAD;
-	//implementation = OMP;
-	//implementation = VECTOR;
-	//implementation = OCL;
-	//implementation = SEQ_COL;
-	//implementation = OMP_COL;
 	this->implementation = implementation;
 
-
+	
 	// Set up heatmap (relevant for Assignment 4)
+	this->heatmapEnabled = heatmapEnabled;
 	setupHeatmapSeq();
 }
 
@@ -326,7 +320,6 @@ void Ped::Model::tick_openmp_col() {
 
 void Ped::Model::tick()
 {
-	// EDIT HERE FOR ASSIGNMENT 1
 	switch (implementation)
 	{
 	case Ped::OMP:
@@ -354,6 +347,8 @@ void Ped::Model::tick()
 		throw new std::runtime_error("Not implemented: " + implementation);
 		break;
 	}
+	if (heatmapEnabled)
+		updateHeatmapSeq();
 }
 void Ped::Model::moveRegion(std::vector<Ped::Tagent *> regionAgents){
 	for (int i = 0; i < regionAgents.size(); i++){
