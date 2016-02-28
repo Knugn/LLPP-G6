@@ -23,32 +23,32 @@
 #include <cstring>
 #pragma comment(lib, "libpedsim.lib")
 ////
-int main(int argc, char*argv[]) { 
-	bool timing_mode = 0;
+int main(int argc, char* argv[]) { 
+	
 	QString scenefile = "scenario.xml";
 	Ped::IMPLEMENTATION implementation = Ped::IMPLEMENTATION::SEQ;
-
-	int i = 1;
+	int maxNumberOfStepsToSimulate = 10000;
+	bool timing_mode = false;
+	
 	// Argument handling
-	while (i < argc)
+	for (int i=1; i < argc; i++)
 	{
 		if (argv[i][0] == '-')
 		{
 			if (argv[i][1] == '-') {
-				if (strcmp(&argv[i][2], "timing-mode") == 0)
-				{
-					cout << "Timing mode on\n";
+				if (strcmp(&argv[i][2], "timing-mode") == 0) {
 					timing_mode = true;
 				}
-				else if (strcmp(&argv[i][2], "help") == 0)
-				{
+				else if (strcmp(&argv[i][2], "help") == 0) {
 					cout << "Usage: " << argv[0] << " [--help] [--timing-mode] [scenario]" << endl;
 					return 0;
 				}
-				else
-				{
+				else {
 					cerr << "Unrecognized command: \"" << argv[i] << "\". Ignoring ..." << endl;
 				}
+			}
+			else if (strncmp(&argv[i][1], "ticks=", 6) == 0) {
+				maxNumberOfStepsToSimulate = atoi(&argv[i][7]);
 			}
 			else if (strcmp(&argv[i][1], "seq") == 0) {
 				implementation = Ped::IMPLEMENTATION::SEQ;
@@ -71,16 +71,18 @@ int main(int argc, char*argv[]) {
 			else if (strcmp(&argv[i][1], "omp_col") == 0) {
 				implementation = Ped::IMPLEMENTATION::OMP_COL;
 			}
+			else {
+				cerr << "Ignoring unknown flag: " << argv[i] << endl;
+			}
 		}
 		else // Assume it is a path to scenefile
 		{
 			scenefile = argv[i];
 		}
-
-		i += 1;
 	}
 
 	cout << "Scenario: " << scenefile.toStdString() << endl;
+
 	switch (implementation)
 	{
 	case Ped::OCL:
@@ -108,6 +110,11 @@ int main(int argc, char*argv[]) {
 		cout << "Implementation: " << "???" << endl;
 		break;
 	}
+	
+	if (timing_mode)
+		cout << "Timing mode enabled." << endl;
+
+	cout << "Number of ticks to simulate: " << maxNumberOfStepsToSimulate << endl;
 
 	// Reading the scenario file and setting up the crowd simulation model
 	Ped::Model model;
@@ -118,8 +125,7 @@ int main(int argc, char*argv[]) {
 	QApplication app(argc, argv);
 	MainWindow mainwindow(model);
 
-	// Default number of steps to simulate
-	const int maxNumberOfStepsToSimulate = 5000;
+	
 	PedSimulation *simulation = new PedSimulation(model, mainwindow);
 
 	cout << "Demo setup complete, running ..." << endl;
@@ -149,8 +155,8 @@ int main(int argc, char*argv[]) {
 	WORD duration = (stop.wMinute - start.wMinute) * 60000 + (stop.wSecond - start.wSecond) * 1000 + (stop.wMilliseconds - start.wMilliseconds);
 	cout << "Time: " << duration <<  " milliseconds." << endl;
 	cout << "Time (min:sec.millis): " << stop.wMinute - start.wMinute << ":" << stop.wSecond - start.wSecond << "." << stop.wMilliseconds - start.wMilliseconds << endl;
-	cout << "Done" << endl;
-	cout << "Type Enter to quit.." << endl;
+	cout << "Simulation done" << endl;
+	cout << "Type Enter to quit ..." << endl;
 
 	getchar(); // Wait for any key. Windows convenience...
 	delete (simulation);
