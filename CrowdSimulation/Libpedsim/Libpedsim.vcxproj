@@ -20,6 +20,7 @@
     <ClInclude Include="src\ped_waypoint.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\heatmap_opencl.cpp" />
     <ClCompile Include="src\heatmap_seq.cpp" />
     <ClCompile Include="src\opencl_utils.cpp" />
     <ClCompile Include="src\ped_agent.cpp" />
@@ -28,6 +29,7 @@
     <ClCompile Include="src\ped_tree.cpp" />
     <ClCompile Include="src\ped_utils.cpp" />
     <ClCompile Include="src\ped_waypoint.cpp" />
+    <ClCompile Include="src\tick_opencl.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{E973076A-293F-4E5C-8533-BA3BD5DEAC92}</ProjectGuid>

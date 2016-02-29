@@ -4,7 +4,7 @@ __kernel void agent_move(__global int * xPos,
 						 __constant int * xDest,
 						 __constant int * yDest,
 						 __constant float * rDest,
-						 const int nAgents) 
+						 const int nAgents)
 {
 	int gid = get_global_id(0);
 	if (gid >= nAgents)

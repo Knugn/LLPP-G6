@@ -7,7 +7,6 @@
 //
 #include "ped_model.h"
 #include "ped_waypoint.h"
-//#include "tick_cuda.h"
 #include <iostream>
 #include <stack>
 #include <algorithm>
@@ -15,7 +14,6 @@
 #include <omp.h>
 #include "immintrin.h"
 
-//#include "CL/cl.h"
 #include "opencl_utils.h"
 #include <string>
 #include <fstream>
@@ -26,13 +24,7 @@
 #define NUM_THREADS 4
 std::thread threads[NUM_THREADS];
 
-bool isClSetup = false;
-cl::Device clDevice;
-cl::Context clContext;
-cl::Program clProgram;
-cl::Kernel clKernel;
-cl::CommandQueue clQueue;
-cl::Buffer xPosBuffer, yPosBuffer, xDestBuffer, yDestBuffer, rDestBuffer;
+
 
 
 Ped::Model::~Model()
@@ -50,25 +42,6 @@ Ped::Model::~Model()
 }
 
 
-void setupOpenClProgram() {
-	clDevice = Ped::OpenClUtils::getDefaultDevice();
-	Ped::OpenClUtils::printDeviceInfo(clDevice);
-	clContext = Ped::OpenClUtils::createDefaultDeviceContext();
-	std::string kernelPath = "..\\Libpedsim\\res\\tick_scalar.cl";
-	std::ifstream kernelFile(kernelPath);
-	if (!kernelFile.is_open())
-		std::cerr << "Failed to open kernel source file \"" << kernelPath << "\"" << std::endl;
-	std::string kernelSource((std::istreambuf_iterator<char>(kernelFile)), std::istreambuf_iterator<char>());
-	cl::Program::Sources sources;
-	sources.push_back(std::make_pair(kernelSource.c_str(), kernelSource.length()));
-	clProgram = cl::Program(clContext, sources);
-	std::vector<cl::Device> devices;
-	devices.push_back(clDevice);
-	cl_int err = clProgram.build(devices);
-	Ped::OpenClUtils::checkErr(err, ("Failed to build program. Build log: \n" + clProgram.getBuildInfo<CL_PROGRAM_BUILD_LOG>(clDevice)).c_str());
-
-	std::cout << "Successfully built cl program." << std::endl;
-}
 
 void Ped::Model::setup(const std::vector<Ped::Tagent*> &agentsInScenario, IMPLEMENTATION implementation, bool heatmapEnabled)
 {
@@ -115,6 +88,18 @@ void Ped::Model::setup(const std::vector<Ped::Tagent*> &agentsInScenario, IMPLEM
 	// Set up heatmap (relevant for Assignment 4)
 	this->heatmapEnabled = heatmapEnabled;
 	setupHeatmapSeq();
+}
+
+void Ped::Model::setupOclContext() {
+	if (!isOclContextSetup) {
+		//clDevice = Ped::OpenClUtils::getDefaultDevice();
+		clDevices.push_back(Ped::OpenClUtils::getDefaultDevice());
+		for (cl::Device clDevice: clDevices)
+			Ped::OpenClUtils::printDeviceInfo(clDevice);
+		//clContext = Ped::OpenClUtils::createDefaultDeviceContext();
+		clContext = cl::Context(clDevices);
+		isOclContextSetup = true;
+	}
 }
 
 int vectorSize = 8;
@@ -194,74 +179,6 @@ void Ped::Model::tick_vector() {
 }
 
 
-void Ped::Model::tick_opencl() {
-	int nAgents = agents.size();
-	for (int i = 0; i < nAgents; i++) {
-		agents[i]->getNextDestinationNormal();
-	}
-
-	if (!isClSetup) {
-		setupOpenClProgram();
-		cl_int err;
-		std::string kernelName = "agent_move";
-		clKernel = cl::Kernel(clProgram, "agent_move", &err);
-		Ped::OpenClUtils::checkErr(err, ("Failed to locate kernel entry function \"" + kernelName + "\"").c_str());
-
-		const char* createBufferErrMsg = "Failed to create buffer.";
-		xPosBuffer = cl::Buffer(clContext, CL_MEM_READ_WRITE, sizeof(int)*nAgents, &err);
-		Ped::OpenClUtils::checkErr(err, createBufferErrMsg);
-		yPosBuffer = cl::Buffer(clContext, CL_MEM_READ_WRITE, sizeof(int)*nAgents, &err);
-		Ped::OpenClUtils::checkErr(err, createBufferErrMsg);
-		xDestBuffer = cl::Buffer(clContext, CL_MEM_READ_ONLY, sizeof(int)*nAgents, &err);
-		Ped::OpenClUtils::checkErr(err, createBufferErrMsg);
-		yDestBuffer = cl::Buffer(clContext, CL_MEM_READ_ONLY, sizeof(int)*nAgents, &err);
-		Ped::OpenClUtils::checkErr(err, createBufferErrMsg);
-		rDestBuffer = cl::Buffer(clContext, CL_MEM_READ_ONLY, sizeof(float)*nAgents, &err);
-		Ped::OpenClUtils::checkErr(err, createBufferErrMsg);
-
-		clQueue = cl::CommandQueue(clContext, clDevice);
-
-		isClSetup = true;
-	}
-
-	cl_int err;
-
-	const char* writeBuffErrMsg = "Failed to write to device buffers.";
-	err = clQueue.enqueueWriteBuffer(xPosBuffer, CL_FALSE, 0, sizeof(int)*nAgents, agents[0]->x);
-	Ped::OpenClUtils::checkErr(err, writeBuffErrMsg);
-	err = clQueue.enqueueWriteBuffer(yPosBuffer, CL_FALSE, 0, sizeof(int)*nAgents, agents[0]->y);
-	Ped::OpenClUtils::checkErr(err, writeBuffErrMsg);
-	err = clQueue.enqueueWriteBuffer(xDestBuffer, CL_FALSE, 0, sizeof(int)*nAgents, agents[0]->destX);
-	Ped::OpenClUtils::checkErr(err, writeBuffErrMsg);
-	err = clQueue.enqueueWriteBuffer(yDestBuffer, CL_FALSE, 0, sizeof(int)*nAgents, agents[0]->destY);
-	Ped::OpenClUtils::checkErr(err, writeBuffErrMsg);
-	err = clQueue.enqueueWriteBuffer(rDestBuffer, CL_FALSE, 0, sizeof(float)*nAgents, agents[0]->destR);
-	Ped::OpenClUtils::checkErr(err, writeBuffErrMsg);
-
-	const char* setArgsErrMsg = "Failed to set kernel arguments.";
-	err = clKernel.setArg(0, xPosBuffer);
-	Ped::OpenClUtils::checkErr(err, setArgsErrMsg);
-	err = clKernel.setArg(1, yPosBuffer);
-	Ped::OpenClUtils::checkErr(err, setArgsErrMsg);
-	err = clKernel.setArg(2, xDestBuffer);
-	Ped::OpenClUtils::checkErr(err, setArgsErrMsg);
-	err = clKernel.setArg(3, yDestBuffer);
-	Ped::OpenClUtils::checkErr(err, setArgsErrMsg);
-	err = clKernel.setArg(4, rDestBuffer);
-	Ped::OpenClUtils::checkErr(err, setArgsErrMsg);
-	err = clKernel.setArg(5, nAgents);
-	Ped::OpenClUtils::checkErr(err, setArgsErrMsg);
-
-	err = clQueue.enqueueNDRangeKernel(clKernel, cl::NullRange, cl::NDRange(nAgents), cl::NullRange);
-	Ped::OpenClUtils::checkErr(err, "Failed to enqueue, invoke or run kernel.");
-
-	const char* readBuffErrMsg = "Failed to read buffers back to host.";
-	err = clQueue.enqueueReadBuffer(xPosBuffer, CL_FALSE, 0, sizeof(int)*nAgents, agents[0]->x);
-	Ped::OpenClUtils::checkErr(err, readBuffErrMsg);
-	err = clQueue.enqueueReadBuffer(yPosBuffer, /*blocking=*/CL_TRUE, 0, sizeof(int)*nAgents, agents[0]->y); 
-	Ped::OpenClUtils::checkErr(err, readBuffErrMsg);
-}
-
 
 void Ped::Model::tick_seq_col() {
 
@@ -277,12 +194,19 @@ void Ped::Model::tick_seq_col() {
 
 
 void Ped::Model::tick_openmp_col() {
+	update_desired_seq();
+	move_openmp_col();
+}
 
+void Ped::Model::update_desired_seq() {
+	int size = agents.size();
+	for (int i = 0; i < size; i++)
+		agents[i]->computeNextDesiredPositionOrignal();
+}
+
+void Ped::Model::move_openmp_col() {
 	int size = agents.size();
 
-	for (int i = 0; i < size; i++) {
-		agents[i]->computeNextDesiredPositionOrignal();
-	}
 	std::vector<int> vec(xPosistions, xPosistions + size);
 	std::vector<std::vector<Tagent *>> regions(nRegions);
 	std::sort(vec.begin(), vec.end());
@@ -315,7 +239,6 @@ void Ped::Model::tick_openmp_col() {
 			}
 		}
 	}
-	
 }
 
 void Ped::Model::tick()
@@ -341,7 +264,15 @@ void Ped::Model::tick()
 		tick_seq_col();
 		break;
 	case Ped::OMP_COL:
-		tick_openmp_col();
+		if (heatmapEnabled) {
+			update_desired_seq();
+			updateHeatmapOpenClAsync(/*how much work*/);
+			move_openmp_col();
+			//updateHeatmapOmp(restOfHeatmap);
+			updateHeatmapOpenClWait();
+		}
+		else
+			tick_openmp_col();
 		break;
 	default:
 		throw new std::runtime_error("Not implemented: " + implementation);

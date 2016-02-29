@@ -2,13 +2,17 @@
 #define __CL_ENABLE_EXCEPTIONS
 #endif
 
-#include "opencl_utils.h"
 #include <iostream>
+#include <fstream>
+#include <streambuf>
+#include <iterator>
+
+#include "opencl_utils.h"
 
 namespace Ped {
 
 	namespace OpenClUtils {
-		
+
 		cl::Platform const getDefaultPlatform() {
 			std::vector<cl::Platform> all_platforms;
 			cl::Platform::get(&all_platforms);
@@ -36,6 +40,24 @@ namespace Ped {
 			return context;
 		}
 
+
+		cl::Program const createProgram(cl::Context context, std::vector<cl::Device> &devices, std::string const &sourcePath) {
+			std::ifstream sourceFile(sourcePath);
+			if (!sourceFile.is_open())
+				std::cerr << "Failed to open kernel source file \"" << sourcePath << "\"" << std::endl;
+			std::string kernelSource((std::istreambuf_iterator<char>(sourceFile)), std::istreambuf_iterator<char>());
+			cl::Program::Sources sources;
+			sources.push_back(std::make_pair(kernelSource.c_str(), kernelSource.length()));
+			cl::Program program(context, sources);
+			cl_int err = program.build(devices);
+			for (cl::Device device : devices) {
+				Ped::OpenClUtils::checkErr(err, 
+					("Failed to build program. Build log: \n" + 
+					program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(device)).c_str());
+			}
+			return program;
+		}
+
 		void printDeviceInfo(cl::Device device) {
 			cl_int err;
 			std::cout << "Listing device info ..." << std::endl;
@@ -43,7 +65,7 @@ namespace Ped {
 			auto name = device.getInfo<CL_DEVICE_NAME>(&err);
 			checkErr(err, "Failed to get device name.");
 			std::cout << "Device name: " << name << std::endl;
-			
+
 			auto type = device.getInfo<CL_DEVICE_TYPE>(&err);
 			checkErr(err, "Failed to get device type.");
 			std::string type_human_readable;
@@ -70,6 +92,34 @@ namespace Ped {
 			auto max_compute_units = device.getInfo<CL_DEVICE_MAX_COMPUTE_UNITS>(&err);
 			checkErr(err, "Failed to get max compute units.");
 			std::cout << "Max compute units: " << max_compute_units << std::endl;
+
+			auto max_work_group_size = device.getInfo<CL_DEVICE_MAX_WORK_GROUP_SIZE>(&err);
+			checkErr(err, "Failed to get max work group size.");
+			std::cout << "Max work group size: " << max_work_group_size << std::endl;
+
+			auto global_mem_size = device.getInfo<CL_DEVICE_GLOBAL_MEM_SIZE>(&err);
+			checkErr(err, "Failed to get global memory size.");
+			std::cout << "Global memory size: " << global_mem_size << " bytes" << std::endl;
+
+			auto global_mem_cache_size = device.getInfo<CL_DEVICE_GLOBAL_MEM_CACHE_SIZE>(&err);
+			checkErr(err, "Failed to get global memory cache size.");
+			std::cout << "Global memory cache size: " << global_mem_cache_size << " bytes" << std::endl;
+
+			auto global_mem_cache_line_size = device.getInfo<CL_DEVICE_GLOBAL_MEM_CACHELINE_SIZE>(&err);
+			checkErr(err, "Failed to get global memory cache line size.");
+			std::cout << "Global memory cacheline size: " << global_mem_cache_line_size << " bytes" << std::endl;
+
+			auto local_mem_size = device.getInfo<CL_DEVICE_LOCAL_MEM_SIZE>(&err);
+			checkErr(err, "Failed to get local memory size.");
+			std::cout << "Local memory size: " << local_mem_size << " bytes" << std::endl;
+
+			auto preferred_int_vector_width = device.getInfo<CL_DEVICE_PREFERRED_VECTOR_WIDTH_INT>(&err);
+			checkErr(err, "Failed to get preferred int vector width.");
+			std::cout << "Preferred int vector width: " << preferred_int_vector_width << " element(s)" << std::endl;
+
+			auto preferred_float_vector_width = device.getInfo<CL_DEVICE_PREFERRED_VECTOR_WIDTH_FLOAT>(&err);
+			checkErr(err, "Failed to get preferred float vector width.");
+			std::cout << "Preferred float vector width: " << preferred_float_vector_width << " element(s)" << std::endl;
 		}
 
 		void checkErr(cl_int err, const char * msg) {

@@ -11,14 +11,19 @@
 //
 #ifndef _ped_model_h_
 #define _ped_model_h_
+
+
 #include <vector>
 #include <map>
+#include <algorithm>
 
-#include "ped_tree.h"
-#include "ped_chunks.h"
 #include "ped_agent.h"
 #include "ped_waypoint.h"
-#include <algorithm>
+#include "ped_tree.h"
+#include "ped_chunks.h"
+
+#include "opencl_utils.h"
+
 
 namespace Ped{
 	class Tagent;
@@ -69,6 +74,15 @@ namespace Ped{
 		void tick_opencl();
 		void tick_seq_col();
 		void tick_openmp_col();
+		void update_desired_seq();
+		void move_openmp_col();
+
+
+		bool isOclContextSetup;
+		std::vector<cl::Device> clDevices;
+		cl::Context clContext;
+
+		void setupOclContext();
 
 		Twaypoint** destination;
 
@@ -86,24 +100,24 @@ namespace Ped{
 		////////////
 		/// Everything below here won't be relevant until Assignment 3
 		///////////////////////////////////////////////
-
-
+		
 		int * xPosistions;
 		int nRegions;
+
+		Ped::Tchunks *chunks;
+
+		set<const Ped::Tagent*> getNeighborsFromChunks(int x, int y, int dist) const;
+
 		// The maximum quadtree depth
-		static const int treeDepth = 8;    
+		static const int treeDepth = 8;
 
 		// Quadtree that keeps track of the positions of each agent
 		// for faster neighbor search in 
 		Ped::Ttree *tree;
 
-		Ped::Tchunks *chunks;
-
 		// Maps the agent to the tree node containing it. Convenience data structure
 		// in order to update the tree in case the agent moves.
 		std::map<const Ped::Tagent*, Ped::Ttree*> *treehash;
-
-		set<const Ped::Tagent*> getNeighborsFromChunks(int x, int y, int dist) const;
 
 		// Returns the set of neighboring agents for the specified position
 		set<const Ped::Tagent*> getNeighbors(int x, int y, int dist) const;
@@ -129,6 +143,11 @@ namespace Ped{
 
 		void setupHeatmapSeq();
 		void updateHeatmapSeq();
+
+		void setupHeatmapOpenCl();
+		void updateHeatmapOpenClAsync();
+		void updateHeatmapOpenClWait();
+
 	};
 }
 #endif
