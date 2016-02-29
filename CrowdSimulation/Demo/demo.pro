@@ -8,6 +8,7 @@ Debug:TARGETDEPS += ../Libpedsim/Debug/Libpedsim.lib
 Release:TARGETDEPS += ../Libpedsim/Release/Libpedsim.lib
 VPATH += ./src
 INCLUDEPATH += ./src ../Libpedsim/src
+INCLUDEPATH += '"'$$(CUDA_PATH)\include'"'
 
 DESTDIR = ./Mixed
 Release:DESTDIR = ./Release
