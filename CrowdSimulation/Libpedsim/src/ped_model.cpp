@@ -278,7 +278,7 @@ void Ped::Model::tick()
 		throw new std::runtime_error("Not implemented: " + implementation);
 		break;
 	}
-	if (heatmapEnabled)
+	if (heatmapEnabled && implementation != OMP_COL)
 		updateHeatmapSeq();
 }
 void Ped::Model::moveRegion(std::vector<Ped::Tagent *> regionAgents){

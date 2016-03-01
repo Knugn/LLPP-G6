@@ -26,9 +26,8 @@ __kernel void increment_heatmap(__global int * heatmap,
 	int old = *p;
 	if (old >= 255)
 		return;
+
 	// Atomically increment heatmap at p.
-	// At the most 9 agents will fight for a desired position.
-	// Also, 7*40 = 280 > 255, so no more than 7 attempts should have to be made at incrementing.
 	old = atomic_add(p, 40);
 	if (old + 40 > 255)
 		atomic_and(p,0xFF);
@@ -47,17 +46,14 @@ __kernel void scale_heatmap(__global int * srcHeatmap,
 	const int lid = get_local_id(0);
 	const int localSize = get_local_size(0);
 
-	//__local int * srcLine;
 	if (lid * cellSize < localSize) {
 		int temp = (gid-lid + lid*cellSize);
 		int tempx = temp % (wSrcHeatmap*cellSize);
-		//int temp -= tempx;
 		int tempy = temp / (wSrcHeatmap*cellSize);
 		tempx /= cellSize;
 		tempy /= cellSize;
 		srcLine[lid] = srcHeatmap[tempy*wSrcHeatmap+tempx];
 	}
-	// barrier here plz
 	barrier(CLK_LOCAL_MEM_FENCE);
 
 	int localIdx = lid / cellSize;
@@ -78,7 +74,8 @@ __kernel void blur_heatmap(__global int * srcHeatmap,
 	if (gidx < 2 || gidx >= wSrcHeatmap - 2 ||
 		gidy < 2 || gidy >= hSrcHeatmap - 2)
 		return;
-	dstHeatmap[gidy*wSrcHeatmap+gidx] = srcHeatmap[gidy*wSrcHeatmap+gidx];
+	int value = srcHeatmap[gidy*wSrcHeatmap+gidx];
+	dstHeatmap[gidy*wSrcHeatmap+gidx] = 0x00FF0000 | value << 24;
 	//const int lidx = get_local_id(0);
 	//const int lidy = get_local_id(1);
 
