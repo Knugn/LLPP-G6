@@ -166,10 +166,12 @@ void Ped::Model::updateHeatmapOpenClAsync()
 	Ped::OpenClUtils::checkErr(err, invokeKernelErrMsg);
 	err = clHeatmapQueue.enqueueNDRangeKernel(clIncrementKernel, cl::NullRange, cl::NDRange(nAgents), cl::NullRange);
 	Ped::OpenClUtils::checkErr(err, invokeKernelErrMsg);
-	err = clHeatmapQueue.enqueueNDRangeKernel(clScaleKernel, cl::NullRange, cl::NDRange(SCALED_SIZE*SCALED_SIZE), cl::NDRange(32));
+	err = clHeatmapQueue.enqueueNDRangeKernel(clScaleKernel, cl::NullRange, cl::NDRange(SCALED_SIZE*SCALED_SIZE), cl::NDRange(CELLSIZE*128));
 	Ped::OpenClUtils::checkErr(err, invokeKernelErrMsg);
 	err = clHeatmapQueue.enqueueNDRangeKernel(clBlurKernel, cl::NullRange, cl::NDRange(SCALED_SIZE*SCALED_SIZE), cl::NullRange);
 	Ped::OpenClUtils::checkErr(err, invokeKernelErrMsg);
+
+
 
 	/*
 	// Scale the data for visual representation

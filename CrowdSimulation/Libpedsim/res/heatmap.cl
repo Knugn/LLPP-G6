@@ -34,7 +34,7 @@ __kernel void increment_heatmap(__global int * heatmap,
 		atomic_and(p,0xFF);
 }
 
-__kernel void scale_heatmap(__constant int * srcHeatmap,
+__kernel void scale_heatmap(__global int * srcHeatmap,
 							const int wSrcHeatmap, 
 							const int hSrcHeatmap,
 							__global int * dstHeatmap,
@@ -64,7 +64,7 @@ __kernel void scale_heatmap(__constant int * srcHeatmap,
 	dstHeatmap[gid] = srcLine[localIdx];
 }
 
-__kernel void blur_heatmap(__constant int * srcHeatmap,
+__kernel void blur_heatmap(__global int * srcHeatmap,
 						   const int wSrcHeatmap, 
 						   const int hSrcHeatmap,
 						   __constant int * filter,
