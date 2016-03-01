@@ -41,7 +41,7 @@ namespace Ped {
 		}
 
 
-		cl::Program const createProgram(cl::Context context, std::vector<cl::Device> &devices, std::string const &sourcePath) {
+		cl::Program const createProgram(cl::Context context, std::vector<cl::Device> const &devices, std::string const &sourcePath) {
 			std::ifstream sourceFile(sourcePath);
 			if (!sourceFile.is_open())
 				std::cerr << "Failed to open kernel source file \"" << sourcePath << "\"" << std::endl;
@@ -56,6 +56,14 @@ namespace Ped {
 					program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(device)).c_str());
 			}
 			return program;
+		}
+
+		cl::Kernel const createKernel(cl::Program const &program, std::string const &kernelName) {
+			cl_int err;
+			//std::string kernelName = "fade_heatmap";
+			cl::Kernel kernel(program, kernelName.c_str(), &err);
+			Ped::OpenClUtils::checkErr(err, ("Failed to locate kernel entry function \"" + kernelName + "\"").c_str());
+			return kernel;
 		}
 
 		void printDeviceInfo(cl::Device device) {

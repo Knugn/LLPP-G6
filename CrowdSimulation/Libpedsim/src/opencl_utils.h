@@ -14,7 +14,8 @@ namespace Ped {
 		cl::Device const getDefaultDevice();
 		cl::Context const createDefaultDeviceContext();
 		
-		cl::Program const createProgram(cl::Context context, std::vector<cl::Device> &devices, std::string const &sourcePath);
+		cl::Program const createProgram(cl::Context context, std::vector<cl::Device> const &devices, std::string const &sourcePath);
+		cl::Kernel const createKernel(cl::Program const &program, std::string const &kernelName);
 
 		void printDeviceInfo(cl::Device device);
 	}
