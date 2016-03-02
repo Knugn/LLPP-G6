@@ -67,16 +67,52 @@ __kernel void blur_heatmap(__global int * srcHeatmap,
 						   const int wFilter,
 						   const int hFilter,
 						   const int filterSum,
-						   __global int * dstHeatmap)
+						   __global int * dstHeatmap,
+						   __local int * localTile)
 {
+	/*
 	const int gidx = get_global_id(0);
 	const int gidy = get_global_id(1);
 	if (gidx < 2 || gidx >= wSrcHeatmap - 2 ||
 		gidy < 2 || gidy >= hSrcHeatmap - 2)
 		return;
+
 	int value = srcHeatmap[gidy*wSrcHeatmap+gidx];
 	dstHeatmap[gidy*wSrcHeatmap+gidx] = 0x00FF0000 | value << 24;
-	//const int lidx = get_local_id(0);
-	//const int lidy = get_local_id(1);
+	
+	*/
+	const int lidx = get_local_id(0);
+	const int lidy = get_local_id(1);
+	const int lwsx = get_local_size(0);
+	const int lwsy = get_local_size(1);
+	const int wgidx = get_group_id(0);
+	const int wgidy = get_group_id(1);
+	const int xOffset = 0;
+	const int yOffset = 0;
+	const int px = xOffset + wgidx*(lwsx-(wFilter-1)) + lidx;
+	const int py = yOffset + wgidy*(lwsy-(hFilter-1)) + lidy;
+	if (px < 0 || px >= wSrcHeatmap ||
+		py < 0 || py >= hSrcHeatmap )
+		return;
 
+	localTile[lidy*lwsx+lidx] = srcHeatmap[py*wSrcHeatmap+px];
+
+	const int padx = wFilter / 2;
+	const int pady = hFilter / 2;
+	if (lidx < padx || lidx >= lwsx - padx ||
+		lidy < pady || lidy >= lwsy - pady ||
+		px < padx || px >= wSrcHeatmap - padx ||
+		py < pady || py >= hSrcHeatmap - pady )
+		return;
+
+	barrier(CLK_LOCAL_MEM_FENCE);
+
+	int sum = 0;
+	for (int fy = 0; fy < hFilter; fy++) {
+		for (int fx = 0; fx < wFilter; fx++) {
+			sum += localTile[(lidy-pady+fy)*lwsx+(lidx-padx+fx)] * filter[fy*wFilter+fx];
+		}
+	}
+	const int value = sum / filterSum;
+	dstHeatmap[py*wSrcHeatmap+px] = 0x00FF0000 | value << 24;
 }

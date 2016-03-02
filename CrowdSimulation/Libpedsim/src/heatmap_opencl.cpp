@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <string>
+#include <cmath>
 
 #include "ped_model.h"
 #include "opencl_utils.h"
@@ -13,6 +14,7 @@ cl::Kernel clFadeKernel, clIncrementKernel, clScaleKernel, clBlurKernel;
 cl::CommandQueue clHeatmapQueue;
 cl::Buffer xDesiredBuffer, yDesiredBuffer;
 cl::Buffer heatmapBuffer, scaledHeatmapBuffer, blurredHeatmapBuffer, blurFilterBuffer;
+int blurTileSize, nBlurTilesX, nBlurTilesY;
 
 const int filterSize = 5;
 const int filter[5*5] = {
@@ -67,8 +69,18 @@ void Ped::Model::updateHeatmapOpenClAsync()
 		err = clHeatmapQueue.enqueueFillBuffer(blurredHeatmapBuffer, 0, 0, sizeof(int)*SCALED_SIZE*SCALED_SIZE);
 		Ped::OpenClUtils::checkErr(err, writeBuffErrMsg);
 
-		err = clHeatmapQueue.enqueueWriteBuffer(blurFilterBuffer, CL_FALSE, 0, sizeof(int)*5*5, &filter);
+		err = clHeatmapQueue.enqueueWriteBuffer(blurFilterBuffer, CL_FALSE, 0, sizeof(int)*filterSize*filterSize, &filter);
 		Ped::OpenClUtils::checkErr(err, writeBuffErrMsg);
+
+		blurTileSize = min(
+			(int)sqrt(clDevices[0].getInfo<CL_DEVICE_LOCAL_MEM_SIZE>() / sizeof(int)),
+			(int)sqrt(clDevices[0].getInfo<CL_DEVICE_MAX_WORK_GROUP_SIZE>())
+			);
+		nBlurTilesX = (int) ceil(SCALED_SIZE / (blurTileSize-(filterSize-1)));
+		nBlurTilesY = nBlurTilesX;
+		std::cout << "Blur tile size: " << blurTileSize << std::endl;
+		std::cout << "Number of blur tiles along x: " << nBlurTilesX << std::endl;
+		std::cout << "Number of blur tiles along y: " << nBlurTilesY << std::endl;
 
 		areHeatmapKernelsSetup = true;
 		std::cout << "Heatmap program and kernels succesfully setup." << std::endl;
@@ -115,6 +127,7 @@ void Ped::Model::updateHeatmapOpenClAsync()
 	err = clScaleKernel.setArg(5, sizeof(int)*256, NULL);
 	Ped::OpenClUtils::checkErr(err, setArgsErrMsg);
 
+
 	err = clBlurKernel.setArg(0, scaledHeatmapBuffer);
 	Ped::OpenClUtils::checkErr(err, setArgsErrMsg);
 	err = clBlurKernel.setArg(1, SCALED_SIZE);
@@ -131,24 +144,28 @@ void Ped::Model::updateHeatmapOpenClAsync()
 	Ped::OpenClUtils::checkErr(err, setArgsErrMsg);
 	err = clBlurKernel.setArg(7, blurredHeatmapBuffer);
 	Ped::OpenClUtils::checkErr(err, setArgsErrMsg);
+	err = clBlurKernel.setArg(8, sizeof(int)*blurTileSize*blurTileSize, NULL);
+	Ped::OpenClUtils::checkErr(err, setArgsErrMsg);
 
 
 	const char* invokeKernelErrMsg = "Failed to enqueue, invoke or run kernel.";
-	
+
 	err = clHeatmapQueue.enqueueNDRangeKernel(clFadeKernel, cl::NullRange, cl::NDRange(SIZE*SIZE), cl::NullRange);
 	Ped::OpenClUtils::checkErr(err, invokeKernelErrMsg);
 	err = clHeatmapQueue.enqueueNDRangeKernel(clIncrementKernel, cl::NullRange, cl::NDRange(nAgents), cl::NullRange);
 	Ped::OpenClUtils::checkErr(err, invokeKernelErrMsg);
 	err = clHeatmapQueue.enqueueNDRangeKernel(clScaleKernel, cl::NullRange, cl::NDRange(SCALED_SIZE*SCALED_SIZE), cl::NDRange(CELLSIZE*128));
 	Ped::OpenClUtils::checkErr(err, invokeKernelErrMsg);
-	err = clHeatmapQueue.enqueueNDRangeKernel(clBlurKernel, cl::NullRange, cl::NDRange(SCALED_SIZE,SCALED_SIZE), cl::NullRange);
+	err = clHeatmapQueue.enqueueNDRangeKernel(clBlurKernel, cl::NullRange, 
+		cl::NDRange(blurTileSize*nBlurTilesX,blurTileSize*nBlurTilesY),
+		cl::NDRange(blurTileSize,blurTileSize));
 	Ped::OpenClUtils::checkErr(err, invokeKernelErrMsg);
 
-	
+
 	const char* readBuffErrMsg = "Failed to read buffers back to host.";
 	err = clHeatmapQueue.enqueueReadBuffer(blurredHeatmapBuffer, CL_FALSE, 0, sizeof(int)*SCALED_SIZE*SCALED_SIZE, *blurred_heatmap);
 	Ped::OpenClUtils::checkErr(err, readBuffErrMsg);
-	
+
 }
 
 
