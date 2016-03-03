@@ -18,6 +18,7 @@
     <ClInclude Include="src\ped_tree.h" />
     <ClInclude Include="src\ped_utils.h" />
     <ClInclude Include="src\ped_waypoint.h" />
+    <ClInclude Include="src\timing_utils.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\heatmap_opencl.cpp" />
@@ -30,6 +31,7 @@
     <ClCompile Include="src\ped_utils.cpp" />
     <ClCompile Include="src\ped_waypoint.cpp" />
     <ClCompile Include="src\tick_opencl.cpp" />
+    <ClCompile Include="src\timing_utils.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{E973076A-293F-4E5C-8533-BA3BD5DEAC92}</ProjectGuid>

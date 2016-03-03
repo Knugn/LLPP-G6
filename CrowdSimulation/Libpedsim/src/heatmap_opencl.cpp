@@ -220,7 +220,7 @@ void Ped::Model::updateHeatmapOpenClWait() {
 	nUpdates++;
 }
 
-void Ped::Model::printHeatmapTimings() {
+void Ped::Model::printHeatmapTimingsOcl() {
 	std::cout << "Printing average heatmap kernel timings ..." << std::endl;
 	std::cout << " Upload desired positions: " << totalUploadTimeMicros / nUpdates << " us" << std::endl;
 	std::cout << " Fade: " << totalFadeTimeMicros / nUpdates << " us" << std::endl;

@@ -409,3 +409,28 @@ void Ped::Model::getNeighbors(list<const Ped::Tagent*>& neighborList, int x, int
 		}
 	}
 }
+
+void Ped::Model::printHeatmapTimings() {
+	switch (implementation)
+	{
+	case Ped::OMP:
+	case Ped::PTHREAD:
+	case Ped::SEQ:
+	case Ped::VECTOR:
+	case Ped::OCL:
+	case Ped::SEQ_COL:
+	case Ped::OMP_COL:
+		break;
+	case Ped::SEQ_COL_SEQ_HM:
+	case Ped::OMP_COL_SEQ_HM:
+		printHeatmapTimingsSeq();
+		break;
+	case Ped::SEQ_COL_OCL_HM:
+	case Ped::OMP_COL_OCL_HM:
+		printHeatmapTimingsOcl();
+		break;
+	default:
+		throw new std::runtime_error("Not implemented: " + implementation);
+		break;
+	}
+}

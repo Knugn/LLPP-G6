@@ -153,7 +153,9 @@ namespace Ped{
 		void updateHeatmapOpenClWait();
 	public:
 		void printHeatmapTimings();
-
+	private:
+		void printHeatmapTimingsSeq();
+		void printHeatmapTimingsOcl();
 	};
 }
 #endif
