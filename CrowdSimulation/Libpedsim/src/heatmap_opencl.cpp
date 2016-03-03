@@ -27,7 +27,7 @@ const int filter[5*5] = {
 const int filterSum = 273;
 
 cl::Event uploadDesXEvent, uploadDesYEvent, fadeEvent, incrementEvent, scaleEvent, blurEvent, downloadBlurredEvent;
-cl_uint totalUploadTime, totalFadeTime, totalIncrementTime, totalScaleTime, totalBlurTime, totalDownloadTime;
+cl_uint totalUploadTimeMicros, totalFadeTimeMicros, totalIncrementTimeMicros, totalScaleTimeMicros, totalBlurTimeMicros, totalDownloadTimeMicros, totalTimeMicros;
 cl_uint nUpdates = 0;
 
 void Ped::Model::updateHeatmapOpenClAsync()
@@ -188,41 +188,45 @@ void Ped::Model::updateHeatmapOpenClAsync()
 void Ped::Model::updateHeatmapOpenClWait() {
 	clHeatmapQueue.finish();
 	
-	cl_ulong uploadDesXTime = uploadDesXEvent.getProfilingInfo<CL_PROFILING_COMMAND_START>() -
-		uploadDesXEvent.getProfilingInfo<CL_PROFILING_COMMAND_END>();
-	cl_ulong uploadDesYTime = uploadDesYEvent.getProfilingInfo<CL_PROFILING_COMMAND_START>() -
-		uploadDesYEvent.getProfilingInfo<CL_PROFILING_COMMAND_END>();
-	totalUploadTime += uploadDesXTime;
+	cl_ulong uploadDesXTime = uploadDesXEvent.getProfilingInfo<CL_PROFILING_COMMAND_END>() -
+		uploadDesXEvent.getProfilingInfo<CL_PROFILING_COMMAND_START>();
+	cl_ulong uploadDesYTime = uploadDesYEvent.getProfilingInfo<CL_PROFILING_COMMAND_END>() -
+		uploadDesYEvent.getProfilingInfo<CL_PROFILING_COMMAND_START>();
+	totalUploadTimeMicros += (uploadDesXTime + uploadDesYTime) / 1000;
 
 	cl_ulong fadeTime = fadeEvent.getProfilingInfo<CL_PROFILING_COMMAND_END>() -
 		fadeEvent.getProfilingInfo<CL_PROFILING_COMMAND_START>();
-	totalFadeTime += fadeTime;
+	totalFadeTimeMicros += fadeTime / 1000;
 
 	cl_ulong incrementTime = incrementEvent.getProfilingInfo<CL_PROFILING_COMMAND_END>() -
 		incrementEvent.getProfilingInfo<CL_PROFILING_COMMAND_START>();
-	totalIncrementTime += incrementTime;
+	totalIncrementTimeMicros += incrementTime / 1000;
 
 	cl_ulong scaleTime = scaleEvent.getProfilingInfo<CL_PROFILING_COMMAND_END>() -
 		scaleEvent.getProfilingInfo<CL_PROFILING_COMMAND_START>();
-	totalScaleTime += scaleTime;
+	totalScaleTimeMicros += scaleTime / 1000;
 
 	cl_ulong blurTime = blurEvent.getProfilingInfo<CL_PROFILING_COMMAND_END>() -
 		blurEvent.getProfilingInfo<CL_PROFILING_COMMAND_START>();
-	totalBlurTime += blurTime;
+	totalBlurTimeMicros += blurTime / 1000;
 
 	cl_ulong downloadBlurredTime = downloadBlurredEvent.getProfilingInfo<CL_PROFILING_COMMAND_END>() -
 		downloadBlurredEvent.getProfilingInfo<CL_PROFILING_COMMAND_START>();
-	totalDownloadTime += downloadBlurredTime;
+	totalDownloadTimeMicros += downloadBlurredTime / 1000;
+
+	totalTimeMicros += (downloadBlurredEvent.getProfilingInfo<CL_PROFILING_COMMAND_END>() -
+		uploadDesXEvent.getProfilingInfo<CL_PROFILING_COMMAND_SUBMIT>()) / 1000;
 
 	nUpdates++;
 }
 
 void Ped::Model::printHeatmapTimings() {
-	std::cout << "Printing average kernel timings ..." << std::endl;
-	std::cout << "Upload desired positions: " << totalUploadTime / nUpdates << " ns" << std::endl;
-	std::cout << "Fade: " << totalFadeTime / nUpdates << " ns" << std::endl;
-	std::cout << "Increment: " << totalIncrementTime / nUpdates << " ns" << std::endl;
-	std::cout << "Scale: " << totalScaleTime / nUpdates << " ns" << std::endl;
-	std::cout << "Blur: " << totalBlurTime / nUpdates << " ns" << std::endl;
-	std::cout << "Download blurred: " << totalDownloadTime / nUpdates << " ns" << std::endl;
+	std::cout << "Printing average heatmap kernel timings ..." << std::endl;
+	std::cout << " Upload desired positions: " << totalUploadTimeMicros / nUpdates << " us" << std::endl;
+	std::cout << " Fade: " << totalFadeTimeMicros / nUpdates << " us" << std::endl;
+	std::cout << " Increment: " << totalIncrementTimeMicros / nUpdates << " us" << std::endl;
+	std::cout << " Scale: " << totalScaleTimeMicros / nUpdates << " us" << std::endl;
+	std::cout << " Blur: " << totalBlurTimeMicros / nUpdates << " us" << std::endl;
+	std::cout << " Download blurred: " << totalDownloadTimeMicros / nUpdates << " us" << std::endl;
+	std::cout << " Total OpenCL heatmap time (upload,compute,download): " << totalTimeMicros / nUpdates << " us" << std::endl;
 }
