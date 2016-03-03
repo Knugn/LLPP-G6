@@ -33,7 +33,10 @@ namespace Ped{
 
 	// The implementation modes for Assignment 1 + 2:
 	// chooses which implementation to use for tick()
-	enum IMPLEMENTATION {OCL, VECTOR, OMP, PTHREAD, SEQ, SEQ_COL, OMP_COL};
+	enum IMPLEMENTATION {SEQ, PTHREAD, OMP, VECTOR, OCL, 
+		SEQ_COL, OMP_COL, 
+		SEQ_COL_SEQ_HM, SEQ_COL_OCL_HM,
+		OMP_COL_SEQ_HM, OMP_COL_OCL_HM};
 
 	class Model
 	{
@@ -58,7 +61,7 @@ namespace Ped{
 
 		// Cleans up the tree and restructures it. Worth calling every now and then.
 		void cleanup();
-		
+
 
 		// Returnst the heatmap visualizing the density of agents
 		int const * const * getHeatmap() const { return blurred_heatmap; };
@@ -73,6 +76,7 @@ namespace Ped{
 		void tick_vector();
 		void tick_opencl();
 		void tick_seq_col();
+		void move_seq_col();
 		void tick_openmp_col();
 		void update_desired_seq();
 		void move_openmp_col();
@@ -100,7 +104,7 @@ namespace Ped{
 		////////////
 		/// Everything below here won't be relevant until Assignment 3
 		///////////////////////////////////////////////
-		
+
 		int * xPosistions;
 		int nRegions;
 
@@ -147,6 +151,8 @@ namespace Ped{
 		void setupHeatmapOpenCl();
 		void updateHeatmapOpenClAsync();
 		void updateHeatmapOpenClWait();
+	public:
+		void printHeatmapTimings();
 
 	};
 }

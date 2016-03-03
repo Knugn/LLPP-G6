@@ -92,11 +92,9 @@ void Ped::Model::setup(const std::vector<Ped::Tagent*> &agentsInScenario, IMPLEM
 
 void Ped::Model::setupOclContext() {
 	if (!isOclContextSetup) {
-		//clDevice = Ped::OpenClUtils::getDefaultDevice();
 		clDevices.push_back(Ped::OpenClUtils::getDefaultDevice());
 		for (cl::Device clDevice: clDevices)
 			Ped::OpenClUtils::printDeviceInfo(clDevice);
-		//clContext = Ped::OpenClUtils::createDefaultDeviceContext();
 		clContext = cl::Context(clDevices);
 		isOclContextSetup = true;
 	}
@@ -180,28 +178,28 @@ void Ped::Model::tick_vector() {
 
 
 
-void Ped::Model::tick_seq_col() {
-
+void Ped::Model::update_desired_seq() {
 	int size = agents.size();
-	for (int i = 0; i < size; i++) {
+	for (int i = 0; i < size; i++)
 		agents[i]->computeNextDesiredPositionOrignal();
-	}
+}
 
+
+void Ped::Model::tick_seq_col() {
+	update_desired_seq();
+	move_seq_col();
+}
+
+void Ped::Model::move_seq_col() {
+	int size = agents.size();
 	for (int i = 0; i < size; i++) {
 		move(agents[i]);
 	}
 }
 
-
 void Ped::Model::tick_openmp_col() {
 	update_desired_seq();
 	move_openmp_col();
-}
-
-void Ped::Model::update_desired_seq() {
-	int size = agents.size();
-	for (int i = 0; i < size; i++)
-		agents[i]->computeNextDesiredPositionOrignal();
 }
 
 void Ped::Model::move_openmp_col() {
@@ -264,23 +262,34 @@ void Ped::Model::tick()
 		tick_seq_col();
 		break;
 	case Ped::OMP_COL:
-		if (heatmapEnabled) {
-			update_desired_seq();
-			updateHeatmapOpenClAsync(/*how much work*/);
-			move_openmp_col();
-			//updateHeatmapOmp(restOfHeatmap);
-			updateHeatmapOpenClWait();
-		}
-		else
-			tick_openmp_col();
+		tick_openmp_col();
+		break;
+	case Ped::SEQ_COL_SEQ_HM:
+		tick_seq_col();
+		updateHeatmapSeq();
+		break;
+	case Ped::OMP_COL_SEQ_HM:
+		tick_openmp_col();
+		updateHeatmapSeq();
+		break;
+	case Ped::SEQ_COL_OCL_HM:
+		update_desired_seq();
+		updateHeatmapOpenClAsync();
+		move_seq_col();
+		updateHeatmapOpenClWait();
+		break;
+	case Ped::OMP_COL_OCL_HM:
+		update_desired_seq();
+		updateHeatmapOpenClAsync();
+		move_openmp_col();
+		updateHeatmapOpenClWait();
 		break;
 	default:
 		throw new std::runtime_error("Not implemented: " + implementation);
 		break;
 	}
-	if (heatmapEnabled && implementation != OMP_COL)
-		updateHeatmapSeq();
 }
+
 void Ped::Model::moveRegion(std::vector<Ped::Tagent *> regionAgents){
 	for (int i = 0; i < regionAgents.size(); i++){
 		move(regionAgents[i]);

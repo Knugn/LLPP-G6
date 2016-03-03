@@ -24,13 +24,13 @@
 #pragma comment(lib, "libpedsim.lib")
 ////
 int main(int argc, char* argv[]) { 
-	
+
 	QString scenefile = "scenario.xml";
 	Ped::IMPLEMENTATION implementation = Ped::IMPLEMENTATION::SEQ;
 	int maxNumberOfStepsToSimulate = 10000;
 	bool timing_mode = false;
 	bool heatmapEnabled = false;
-	
+
 	// Argument handling
 	for (int i=1; i < argc; i++)
 	{
@@ -50,10 +50,10 @@ int main(int argc, char* argv[]) {
 			}
 			else if (strncmp(&argv[i][1], "ticks=", 6) == 0) {
 				maxNumberOfStepsToSimulate = atoi(&argv[i][7]);
-			}
+			}/*
 			else if (strcmp(&argv[i][1], "heatmap") == 0 || strcmp(&argv[i][1], "hm") == 0) {
 				heatmapEnabled = true;
-			}
+			}*/
 			else if (strcmp(&argv[i][1], "seq") == 0) {
 				implementation = Ped::IMPLEMENTATION::SEQ;
 			}
@@ -74,6 +74,18 @@ int main(int argc, char* argv[]) {
 			}
 			else if (strcmp(&argv[i][1], "omp_col") == 0) {
 				implementation = Ped::IMPLEMENTATION::OMP_COL;
+			}
+			else if (strcmp(&argv[i][1], "seq_col_seq_hm") == 0) {
+				implementation = Ped::IMPLEMENTATION::SEQ_COL_SEQ_HM;
+			}
+			else if (strcmp(&argv[i][1], "seq_col_ocl_hm") == 0) {
+				implementation = Ped::IMPLEMENTATION::SEQ_COL_OCL_HM;
+			}
+			else if (strcmp(&argv[i][1], "omp_col_seq_hm") == 0) {
+				implementation = Ped::IMPLEMENTATION::OMP_COL_SEQ_HM;
+			}
+			else if (strcmp(&argv[i][1], "omp_col_ocl_hm") == 0) {
+				implementation = Ped::IMPLEMENTATION::OMP_COL_OCL_HM;
 			}
 			else {
 				cerr << "Ignoring unknown flag: " << argv[i] << endl;
@@ -105,23 +117,36 @@ int main(int argc, char* argv[]) {
 		cout << "Implementation: " << "Sequential, no collision" << endl;
 		break;
 	case Ped::SEQ_COL:
-		cout << "Implementation: " << "Sequential, with collision" << endl;
+		cout << "Implementation: " << "Sequential movement with collision" << endl;
 		break;
 	case Ped::OMP_COL:
-		cout << "Implementation: " << "OpenMP, with collision" << endl;
+		cout << "Implementation: " << "OpenMP movement with collision" << endl;
+		break;
+	case Ped::SEQ_COL_SEQ_HM:
+		cout << "Implementation: " << "Sequential movement with collision and sequential heatmap" << endl;
+		break;
+	case Ped::SEQ_COL_OCL_HM:
+		cout << "Implementation: " << "Sequential movement with collision and OpenCL heatmap" << endl;
+		break;
+	case Ped::OMP_COL_SEQ_HM:
+		cout << "Implementation: " << "OpenMP movement with collision and sequential heatmap" << endl;
+		break;
+	case Ped::OMP_COL_OCL_HM:
+		cout << "Implementation: " << "OpenMP movement with collision and OpenCL heatmap" << endl;
 		break;
 	default:
 		cout << "Implementation: " << "???" << endl;
 		break;
 	}
-	
+
 	if (timing_mode)
 		cout << "Timing mode enabled." << endl;
-
+	/*
 	if (heatmapEnabled)
-		cout << "Heatmap enabled." << endl;
+	cout << "Heatmap enabled." << endl;
 	else
-		cout << "Heatmap disabled." << endl;
+	cout << "Heatmap disabled." << endl;
+	*/
 
 	cout << "Number of ticks to simulate: " << maxNumberOfStepsToSimulate << endl;
 
@@ -134,7 +159,7 @@ int main(int argc, char* argv[]) {
 	QApplication app(argc, argv);
 	MainWindow mainwindow(model);
 
-	
+
 	PedSimulation *simulation = new PedSimulation(model, mainwindow);
 
 	cout << "Demo setup complete, running ..." << endl;
@@ -161,10 +186,13 @@ int main(int argc, char* argv[]) {
 	// End timing
 	GetSystemTime(&stop);
 
+	cout << "Simulation done" << endl;
 	WORD duration = (stop.wMinute - start.wMinute) * 60000 + (stop.wSecond - start.wSecond) * 1000 + (stop.wMilliseconds - start.wMilliseconds);
 	cout << "Time: " << duration <<  " milliseconds." << endl;
 	cout << "Time (min:sec.millis): " << stop.wMinute - start.wMinute << ":" << stop.wSecond - start.wSecond << "." << stop.wMilliseconds - start.wMilliseconds << endl;
-	cout << "Simulation done" << endl;
+
+	model.printHeatmapTimings();
+
 	cout << "Type Enter to quit ..." << endl;
 
 	getchar(); // Wait for any key. Windows convenience...

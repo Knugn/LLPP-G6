@@ -26,6 +26,9 @@ const int filter[5*5] = {
 };
 const int filterSum = 273;
 
+cl::Event uploadDesXEvent, uploadDesYEvent, fadeEvent, incrementEvent, scaleEvent, blurEvent, downloadBlurredEvent;
+cl_uint totalUploadTime, totalFadeTime, totalIncrementTime, totalScaleTime, totalBlurTime, totalDownloadTime;
+cl_uint nUpdates = 0;
 
 void Ped::Model::updateHeatmapOpenClAsync()
 {
@@ -59,7 +62,8 @@ void Ped::Model::updateHeatmapOpenClAsync()
 		blurFilterBuffer = cl::Buffer(clContext, CL_MEM_READ_ONLY, sizeof(int)*CELLSIZE*CELLSIZE, &err);
 		Ped::OpenClUtils::checkErr(err, createBufferErrMsg);
 
-		clHeatmapQueue = cl::CommandQueue(clContext, clDevices[0]);
+		clHeatmapQueue = cl::CommandQueue(clContext, clDevices[0], CL_QUEUE_PROFILING_ENABLE, &err);
+		Ped::OpenClUtils::checkErr(err, "Failed to create queue.");
 
 		const char* writeBuffErrMsg = "Failed to write to device buffers.";
 		err = clHeatmapQueue.enqueueFillBuffer(heatmapBuffer, 0, 0, sizeof(int)*SIZE*SIZE);
@@ -89,9 +93,11 @@ void Ped::Model::updateHeatmapOpenClAsync()
 	cl_int err = CL_SUCCESS;
 
 	const char* writeBuffErrMsg = "Failed to write to device buffers.";
-	err = clHeatmapQueue.enqueueWriteBuffer(xDesiredBuffer, CL_FALSE, 0, sizeof(int)*nAgents, agents[0]->desX);
+	err = clHeatmapQueue.enqueueWriteBuffer(xDesiredBuffer, CL_FALSE, 0, sizeof(int)*nAgents, agents[0]->desX, 
+		NULL, &uploadDesXEvent);
 	Ped::OpenClUtils::checkErr(err, writeBuffErrMsg);
-	err = clHeatmapQueue.enqueueWriteBuffer(yDesiredBuffer, CL_FALSE, 0, sizeof(int)*nAgents, agents[0]->desY);
+	err = clHeatmapQueue.enqueueWriteBuffer(yDesiredBuffer, CL_FALSE, 0, sizeof(int)*nAgents, agents[0]->desY,
+		NULL, &uploadDesYEvent);
 	Ped::OpenClUtils::checkErr(err, writeBuffErrMsg);
 
 	const char* setArgsErrMsg = "Failed to set kernel arguments.";
@@ -150,20 +156,30 @@ void Ped::Model::updateHeatmapOpenClAsync()
 
 	const char* invokeKernelErrMsg = "Failed to enqueue, invoke or run kernel.";
 
-	err = clHeatmapQueue.enqueueNDRangeKernel(clFadeKernel, cl::NullRange, cl::NDRange(SIZE*SIZE), cl::NullRange);
+	err = clHeatmapQueue.enqueueNDRangeKernel(clFadeKernel, 
+		cl::NullRange, cl::NDRange(SIZE*SIZE), cl::NullRange, 
+		NULL, &fadeEvent);
 	Ped::OpenClUtils::checkErr(err, invokeKernelErrMsg);
-	err = clHeatmapQueue.enqueueNDRangeKernel(clIncrementKernel, cl::NullRange, cl::NDRange(nAgents), cl::NullRange);
+
+	err = clHeatmapQueue.enqueueNDRangeKernel(clIncrementKernel, 
+		cl::NullRange, cl::NDRange(nAgents), cl::NullRange, 
+		NULL, &incrementEvent);
 	Ped::OpenClUtils::checkErr(err, invokeKernelErrMsg);
-	err = clHeatmapQueue.enqueueNDRangeKernel(clScaleKernel, cl::NullRange, cl::NDRange(SCALED_SIZE*SCALED_SIZE), cl::NDRange(CELLSIZE*128));
+
+	err = clHeatmapQueue.enqueueNDRangeKernel(clScaleKernel, 
+		cl::NullRange, cl::NDRange(SCALED_SIZE*SCALED_SIZE), cl::NDRange(CELLSIZE*128), 
+		NULL, &scaleEvent);
 	Ped::OpenClUtils::checkErr(err, invokeKernelErrMsg);
-	err = clHeatmapQueue.enqueueNDRangeKernel(clBlurKernel, cl::NullRange, 
-		cl::NDRange(blurTileSize*nBlurTilesX,blurTileSize*nBlurTilesY),
-		cl::NDRange(blurTileSize,blurTileSize));
+
+	err = clHeatmapQueue.enqueueNDRangeKernel(clBlurKernel, 
+		cl::NullRange, cl::NDRange(blurTileSize*nBlurTilesX,blurTileSize*nBlurTilesY), cl::NDRange(blurTileSize,blurTileSize),
+		NULL, &blurEvent);
 	Ped::OpenClUtils::checkErr(err, invokeKernelErrMsg);
 
 
 	const char* readBuffErrMsg = "Failed to read buffers back to host.";
-	err = clHeatmapQueue.enqueueReadBuffer(blurredHeatmapBuffer, CL_FALSE, 0, sizeof(int)*SCALED_SIZE*SCALED_SIZE, *blurred_heatmap);
+	err = clHeatmapQueue.enqueueReadBuffer(blurredHeatmapBuffer, CL_FALSE, 0, sizeof(int)*SCALED_SIZE*SCALED_SIZE, *blurred_heatmap,
+		NULL, &downloadBlurredEvent);
 	Ped::OpenClUtils::checkErr(err, readBuffErrMsg);
 
 }
@@ -171,4 +187,42 @@ void Ped::Model::updateHeatmapOpenClAsync()
 
 void Ped::Model::updateHeatmapOpenClWait() {
 	clHeatmapQueue.finish();
+	
+	cl_ulong uploadDesXTime = uploadDesXEvent.getProfilingInfo<CL_PROFILING_COMMAND_START>() -
+		uploadDesXEvent.getProfilingInfo<CL_PROFILING_COMMAND_END>();
+	cl_ulong uploadDesYTime = uploadDesYEvent.getProfilingInfo<CL_PROFILING_COMMAND_START>() -
+		uploadDesYEvent.getProfilingInfo<CL_PROFILING_COMMAND_END>();
+	totalUploadTime += uploadDesXTime;
+
+	cl_ulong fadeTime = fadeEvent.getProfilingInfo<CL_PROFILING_COMMAND_END>() -
+		fadeEvent.getProfilingInfo<CL_PROFILING_COMMAND_START>();
+	totalFadeTime += fadeTime;
+
+	cl_ulong incrementTime = incrementEvent.getProfilingInfo<CL_PROFILING_COMMAND_END>() -
+		incrementEvent.getProfilingInfo<CL_PROFILING_COMMAND_START>();
+	totalIncrementTime += incrementTime;
+
+	cl_ulong scaleTime = scaleEvent.getProfilingInfo<CL_PROFILING_COMMAND_END>() -
+		scaleEvent.getProfilingInfo<CL_PROFILING_COMMAND_START>();
+	totalScaleTime += scaleTime;
+
+	cl_ulong blurTime = blurEvent.getProfilingInfo<CL_PROFILING_COMMAND_END>() -
+		blurEvent.getProfilingInfo<CL_PROFILING_COMMAND_START>();
+	totalBlurTime += blurTime;
+
+	cl_ulong downloadBlurredTime = downloadBlurredEvent.getProfilingInfo<CL_PROFILING_COMMAND_END>() -
+		downloadBlurredEvent.getProfilingInfo<CL_PROFILING_COMMAND_START>();
+	totalDownloadTime += downloadBlurredTime;
+
+	nUpdates++;
+}
+
+void Ped::Model::printHeatmapTimings() {
+	std::cout << "Printing average kernel timings ..." << std::endl;
+	std::cout << "Upload desired positions: " << totalUploadTime / nUpdates << " ns" << std::endl;
+	std::cout << "Fade: " << totalFadeTime / nUpdates << " ns" << std::endl;
+	std::cout << "Increment: " << totalIncrementTime / nUpdates << " ns" << std::endl;
+	std::cout << "Scale: " << totalScaleTime / nUpdates << " ns" << std::endl;
+	std::cout << "Blur: " << totalBlurTime / nUpdates << " ns" << std::endl;
+	std::cout << "Download blurred: " << totalDownloadTime / nUpdates << " ns" << std::endl;
 }
