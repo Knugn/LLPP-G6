@@ -72,7 +72,7 @@ namespace Ped {
 
 			auto name = device.getInfo<CL_DEVICE_NAME>(&err);
 			checkErr(err, "Failed to get device name.");
-			std::cout << "Device name: " << name << std::endl;
+			std::cout << " Device name: " << name << std::endl;
 
 			auto type = device.getInfo<CL_DEVICE_TYPE>(&err);
 			checkErr(err, "Failed to get device type.");
@@ -83,51 +83,51 @@ namespace Ped {
 				type_human_readable = "CPU";
 			else
 				type_human_readable = "? (Not CPU or GPU)";
-			std::cout << "Device type: " << type_human_readable << std::endl;
+			std::cout << " Device type: " << type_human_readable << std::endl;
 
 			auto device_version = device.getInfo<CL_DEVICE_VERSION>(&err);
 			checkErr(err, "Failed to get device version.");
-			std::cout << "Device version: " << device_version << std::endl;
+			std::cout << " Device version: " << device_version << std::endl;
 
 			auto opencl_c_version = device.getInfo<CL_DEVICE_OPENCL_C_VERSION>(&err);
 			checkErr(err, "Failed to get device OpenCL C version.");
-			std::cout << "Device OpenCL C version: " << opencl_c_version << std::endl;
+			std::cout << " Device OpenCL C version: " << opencl_c_version << std::endl;
 
 			auto driver_version = device.getInfo<CL_DRIVER_VERSION>(&err);
 			checkErr(err, "Failed to get driver version.");
-			std::cout << "Driver version: " << driver_version << std::endl;
+			std::cout << " Driver version: " << driver_version << std::endl;
 
 			auto max_compute_units = device.getInfo<CL_DEVICE_MAX_COMPUTE_UNITS>(&err);
 			checkErr(err, "Failed to get max compute units.");
-			std::cout << "Max compute units: " << max_compute_units << std::endl;
+			std::cout << " Max compute units: " << max_compute_units << std::endl;
 
 			auto max_work_group_size = device.getInfo<CL_DEVICE_MAX_WORK_GROUP_SIZE>(&err);
 			checkErr(err, "Failed to get max work group size.");
-			std::cout << "Max work group size: " << max_work_group_size << std::endl;
+			std::cout << " Max work group size: " << max_work_group_size << std::endl;
 
 			auto global_mem_size = device.getInfo<CL_DEVICE_GLOBAL_MEM_SIZE>(&err);
 			checkErr(err, "Failed to get global memory size.");
-			std::cout << "Global memory size: " << global_mem_size << " bytes" << std::endl;
+			std::cout << " Global memory size: " << global_mem_size << " bytes" << std::endl;
 
 			auto global_mem_cache_size = device.getInfo<CL_DEVICE_GLOBAL_MEM_CACHE_SIZE>(&err);
 			checkErr(err, "Failed to get global memory cache size.");
-			std::cout << "Global memory cache size: " << global_mem_cache_size << " bytes" << std::endl;
+			std::cout << " Global memory cache size: " << global_mem_cache_size << " bytes" << std::endl;
 
 			auto global_mem_cache_line_size = device.getInfo<CL_DEVICE_GLOBAL_MEM_CACHELINE_SIZE>(&err);
 			checkErr(err, "Failed to get global memory cache line size.");
-			std::cout << "Global memory cacheline size: " << global_mem_cache_line_size << " bytes" << std::endl;
+			std::cout << " Global memory cacheline size: " << global_mem_cache_line_size << " bytes" << std::endl;
 
 			auto local_mem_size = device.getInfo<CL_DEVICE_LOCAL_MEM_SIZE>(&err);
 			checkErr(err, "Failed to get local memory size.");
-			std::cout << "Local memory size: " << local_mem_size << " bytes" << std::endl;
+			std::cout << " Local memory size: " << local_mem_size << " bytes" << std::endl;
 
 			auto preferred_int_vector_width = device.getInfo<CL_DEVICE_PREFERRED_VECTOR_WIDTH_INT>(&err);
 			checkErr(err, "Failed to get preferred int vector width.");
-			std::cout << "Preferred int vector width: " << preferred_int_vector_width << " element(s)" << std::endl;
+			std::cout << " Preferred int vector width: " << preferred_int_vector_width << " element(s)" << std::endl;
 
 			auto preferred_float_vector_width = device.getInfo<CL_DEVICE_PREFERRED_VECTOR_WIDTH_FLOAT>(&err);
 			checkErr(err, "Failed to get preferred float vector width.");
-			std::cout << "Preferred float vector width: " << preferred_float_vector_width << " element(s)" << std::endl;
+			std::cout << " Preferred float vector width: " << preferred_float_vector_width << " element(s)" << std::endl;
 		}
 
 		void checkErr(cl_int err, const char * msg) {
